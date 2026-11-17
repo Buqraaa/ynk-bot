@@ -115,6 +115,7 @@
                     
                     <div class="menu-category">Plugins & Modules</div>
                     <button class="menu-btn" onclick="switchTab('sayac', this)">📊 Sayaç Sistemi</button>
+                    <button class="menu-btn" onclick="switchTab('karsilama', this)">👋 Karşılama & Veda</button>
                     <button class="menu-btn" onclick="switchTab('tavsiye', this)">💡 Tavsiye Sistemi</button>
                     <button class="menu-btn" onclick="switchTab('log', this)">🛡️ Mod Log Sistemi</button>
                     <button class="menu-btn" onclick="switchTab('youtube', this)">📺 YouTube Bildirim</button>
@@ -157,14 +158,14 @@
                             <div class="feature-desc">Toplu mesaj temizleme (/sil) ve tavsiye komutlarının ayarlarını yönet.</div>
                         </div>
                     </div>
-                    <div class="feature-card" onclick="switchTab('youtube', document.querySelectorAll('.menu-btn')[5])">
+                    <div class="feature-card" onclick="switchTab('youtube', document.querySelectorAll('.menu-btn')[6])">
                         <div>
                             <div class="feature-card-top"><div class="feature-icon">📺</div><span class="badge">Otomasyon</span></div>
                             <div class="feature-title">YouTube Video & Shorts</div>
                             <div class="feature-desc">Kanal linki (@ardinus) ile otomatik video ve Shorts algılama ve duyuru.</div>
                         </div>
                     </div>
-                    <div class="feature-card" onclick="switchTab('duyuru', document.querySelectorAll('.menu-btn')[6])">
+                    <div class="feature-card" onclick="switchTab('duyuru', document.querySelectorAll('.menu-btn')[7])">
                         <div>
                             <div class="feature-card-top"><div class="feature-icon">📢</div><span class="badge">Canlı</span></div>
                             <div class="feature-title">Canlı Duyuru Gönder</div>
@@ -178,14 +179,21 @@
                             <div class="feature-desc">Üye katılımlarını, çıkışlarını ve hedef sayaç oda takibini yönet.</div>
                         </div>
                     </div>
-                    <div class="feature-card" onclick="switchTab('tavsiye', document.querySelectorAll('.menu-btn')[3])">
+                    <div class="feature-card" onclick="switchTab('karsilama', document.querySelectorAll('.menu-btn')[3])">
+                        <div>
+                            <div class="feature-card-top"><div class="feature-icon">👋</div><span class="badge">Yeni</span></div>
+                            <div class="feature-title">Karşılama & Veda</div>
+                            <div class="feature-desc">Yeni üyeleri karşıla, otomatik rol ver ve ayrılanları uğurla.</div>
+                        </div>
+                    </div>
+                    <div class="feature-card" onclick="switchTab('tavsiye', document.querySelectorAll('.menu-btn')[4])">
                         <div>
                             <div class="feature-card-top"><div class="feature-icon">💡</div><span class="badge">Aktif</span></div>
                             <div class="feature-title">Tavsiye Sistemi</div>
                             <div class="feature-desc">Kullanıcıların öneri bırakabileceği özel kanal ve reaksiyon yönetimi.</div>
                         </div>
                     </div>
-                    <div class="feature-card" onclick="switchTab('log', document.querySelectorAll('.menu-btn')[4])">
+                    <div class="feature-card" onclick="switchTab('log', document.querySelectorAll('.menu-btn')[5])">
                         <div>
                             <div class="feature-card-top"><div class="feature-icon">🛡️</div><span class="badge">Aktif</span></div>
                             <div class="feature-title">Mod Log Sistemi</div>
@@ -208,7 +216,7 @@
                             <div class="feature-desc">Bulunulan sohbet odasındaki belirtilen sayı kadar (Örn: /sil 100) mesajı tek seferde temizler. Ayarlamak için tıkla.</div>
                         </div>
                     </div>
-                    <div class="feature-card" onclick="switchTab('tavsiye', document.querySelectorAll('.menu-btn')[3])">
+                    <div class="feature-card" onclick="switchTab('tavsiye', document.querySelectorAll('.menu-btn')[4])">
                         <div>
                             <div class="feature-card-top"><div class="feature-icon">💡</div><span class="badge">/tavsiye [mesaj]</span></div>
                             <div class="feature-title">/tavsiye Komutu</div>
@@ -243,6 +251,44 @@
                         <input type="text" name="giris" value="{{ ayarlar.giris_mesaji }}">
                         <label>Çıkış Mesajı:</label>
                         <input type="text" name="cikis" value="{{ ayarlar.cikis_mesaji }}">
+                        <button type="submit" class="save-btn">Ayarları Kaydet</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- KARŞILAMA VE VEDA SİSTEMİ -->
+            <div id="karsilama" class="tab-pane">
+                <h1>👋 Karşılama &amp; Veda Sistemi</h1>
+                <p class="subtitle">Yeni üyeleri karşıla, otomatik rol ver ve ayrılanları uğurla. Kanal seçmezsen özellik kapalı kalır.</p>
+                <div class="card">
+                    <button class="refresh-btn" onclick="window.location.reload();">🔄 Kanalları ve Rolleri Yenile</button>
+                    <form action="/guncelle-karsilama" method="post">
+                        <label>Karşılama Kanalı:</label>
+                        <select name="hosgeldin_kanal">
+                            <option value="" {% if not ayarlar.hosgeldin_kanal %}selected{% endif %}>Kapalı</option>
+                            {% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.hosgeldin_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}
+                        </select>
+                        <label>Karşılama Başlığı:</label>
+                        <input type="text" name="hosgeldin_baslik" value="{{ ayarlar.hosgeldin_baslik }}">
+                        <label>Karşılama Mesajı:</label>
+                        <input type="text" name="hosgeldin_mesaj" value="{{ ayarlar.hosgeldin_mesaj }}">
+                        <p style="color: #94a3b8; font-size: 12px; margin-top: -6px;">Kullanılabilir: <b>{uye}</b>, <b>{isim}</b>, <b>{sunucu}</b>, <b>{uye_sayisi}</b></p>
+                        <label>Embed Rengi (örn: #5865F2):</label>
+                        <input type="text" name="hosgeldin_renk" value="{{ ayarlar.hosgeldin_renk }}">
+                        <label>Otomatik Rol:</label>
+                        <select name="hosgeldin_rol_id">
+                            <option value="0" {% if not ayarlar.hosgeldin_rol_id %}selected{% endif %}>Rol verme</option>
+                            {% for r in roller %}<option value="{{ r.id }}" {% if r.id == ayarlar.hosgeldin_rol_id %}selected{% endif %}>@{{ r.name }}</option>{% endfor %}
+                        </select>
+                        {% if not roller %}<p style="color: #f59e0b; font-size: 12px; margin-top: -6px;">Rol listesi için botun çalışıyor olması gerekir.</p>{% endif %}
+                        <label>Veda Kanalı:</label>
+                        <select name="veda_kanal">
+                            <option value="" {% if not ayarlar.veda_kanal %}selected{% endif %}>Kapalı</option>
+                            {% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.veda_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}
+                        </select>
+                        <label>Veda Mesajı:</label>
+                        <input type="text" name="veda_mesaj" value="{{ ayarlar.veda_mesaj }}">
+                        <p style="color: #94a3b8; font-size: 12px; margin-top: -6px;">Kullanılabilir: <b>{uye}</b>, <b>{isim}</b>, <b>{sunucu}</b>, <b>{uye_sayisi}</b></p>
                         <button type="submit" class="save-btn">Ayarları Kaydet</button>
                     </form>
                 </div>

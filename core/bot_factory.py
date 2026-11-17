@@ -8,6 +8,7 @@ from config import BOT_AYARLARI, ayarlari_kaydet, logger
 
 EXTENSIONS = (
     "cogs.sayac",
+    "cogs.karsilama",
     "cogs.tavsiye",
     "cogs.moderasyon",
     "cogs.log",
@@ -17,6 +18,8 @@ EXTENSIONS = (
 # Kanal adi -> kanal ID migrasyonu bu anahtarlar icin yapilir.
 KANAL_ANAHTARLARI = (
     "sayac_kanal",
+    "hosgeldin_kanal",
+    "veda_kanal",
     "tavsiye_kanal",
     "log_kanal",
     "youtube_kanal",

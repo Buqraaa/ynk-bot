@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 import threading
 
 import uvicorn
@@ -41,8 +42,30 @@ def sunucu_kanallarini_getir():
     return sorted(set(kanallar))
 
 
+def sunucu_rollerini_getir():
+    """Otomatik rol menusu icin botun verebilecegi rolleri listeler."""
+    roller = []
+    try:
+        guild = ayarli_sunucu(bot_manager.bot)
+        if guild is not None:
+            bot_uyesi = guild.me
+            for rol in reversed(guild.roles):
+                if rol.is_default() or rol.managed:
+                    continue
+                if bot_uyesi is not None and rol >= bot_uyesi.top_role:
+                    continue
+                roller.append({"id": rol.id, "name": rol.name})
+    except Exception:
+        logger.exception("Rol çekme hatası")
+    return roller
+
+
 def _kanal_id_guncelle(anahtar, kanal_adi):
     """Kanal adi degistiyse ID'yi sifirlar, bot calisiyorsa yenisini bulur."""
+    if not kanal_adi:
+        BOT_AYARLARI[f"{anahtar}_id"] = 0
+        return
+
     if BOT_AYARLARI.get(anahtar, "") != kanal_adi:
         BOT_AYARLARI[f"{anahtar}_id"] = 0
 
@@ -91,6 +114,7 @@ def panel_ana_sayfa(request: Request):
         name="index.html",
         context={
             "kanallar": sunucu_kanallarini_getir(),
+            "roller": sunucu_rollerini_getir(),
             "ayarlar": BOT_AYARLARI,
             "bot_durumu": durum,
             "durum_renk": durum_renk,
@@ -133,6 +157,43 @@ def guncelle_sayac(
     BOT_AYARLARI["sayac_kanal"] = kanal
     BOT_AYARLARI["giris_mesaji"] = giris
     BOT_AYARLARI["cikis_mesaji"] = cikis
+    _ayarlari_kaydet()
+    return RedirectResponse(url="/", status_code=303)
+
+
+@app.post("/guncelle-karsilama", response_class=RedirectResponse)
+def guncelle_karsilama(
+    hosgeldin_kanal: str = Form(""),
+    hosgeldin_baslik: str = Form(""),
+    hosgeldin_mesaj: str = Form(""),
+    hosgeldin_renk: str = Form("#5865F2"),
+    hosgeldin_rol_id: int = Form(0),
+    veda_kanal: str = Form(""),
+    veda_mesaj: str = Form(""),
+):
+    _kanal_id_guncelle("hosgeldin_kanal", hosgeldin_kanal)
+    BOT_AYARLARI["hosgeldin_kanal"] = hosgeldin_kanal
+
+    baslik = hosgeldin_baslik.strip() or "👋 Hoş geldin!"
+    mesaj = hosgeldin_mesaj.strip() or "Sunucumuza hoş geldin {uye}! 🎉"
+    BOT_AYARLARI["hosgeldin_baslik"] = baslik
+    BOT_AYARLARI["hosgeldin_mesaj"] = mesaj
+
+    renk = (hosgeldin_renk or "").strip()
+    if not re.fullmatch(r"#?[0-9a-fA-F]{6}", renk):
+        renk = "#5865F2"
+    elif not renk.startswith("#"):
+        renk = "#" + renk
+    BOT_AYARLARI["hosgeldin_renk"] = renk.upper()
+
+    BOT_AYARLARI["hosgeldin_rol_id"] = max(0, int(hosgeldin_rol_id))
+
+    _kanal_id_guncelle("veda_kanal", veda_kanal)
+    BOT_AYARLARI["veda_kanal"] = veda_kanal
+    BOT_AYARLARI["veda_mesaj"] = (
+        veda_mesaj.strip() or "{uye} aramızdan ayrıldı. Görüşürüz!"
+    )
+
     _ayarlari_kaydet()
     return RedirectResponse(url="/", status_code=303)
 

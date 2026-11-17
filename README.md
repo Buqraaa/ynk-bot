@@ -36,9 +36,10 @@ YNK BOT/
 │   └── user_extension.py   # Kullanıcı kod uzantısını yükleme
 ├── cogs/
 │   ├── sayac.py            # Üye giriş/çıkış sayaç sistemi
+│   ├── karsilama.py        # Karşılama, veda ve otomatik rol
 │   ├── tavsiye.py          # /tavsiye komutu
 │   ├── moderasyon.py       # /sil komutu
-│   ├── log.py              # Mesaj silme logu
+│   ├── log.py              # Denetim günlüğü
 │   └── youtube.py          # YouTube video/Shorts bildirimi
 ├── web/
 │   ├── app.py              # FastAPI panel rotaları
@@ -64,6 +65,7 @@ YNK BOT/
 
 - Botu başlat / kapat / Hot Reset
 - Sayaç sistemi (hedef üye, giriş/çıkış mesajları, kanal)
+- Karşılama & veda (kanal, başlık, mesaj, renk, otomatik rol)
 - Tavsiye sistemi (kanal ve başlık)
 - Mod log kanalı
 - YouTube otomasyonu (`@handle`, link veya `UC...` kanal ID'si)
@@ -140,4 +142,8 @@ Masaüstü\YNK BOT - Yedek (2026-11-17)
 5. SQLite veritabanı + sunucu bazlı ayarlar
 6. Moderasyon komutları (ban, kick, timeout, warn)
 7. Otomatik moderasyon (spam, reklam, küfür, raid)
-8. Karşılama kartı, reaksiyon rolleri, ticket, seviye sistemi
+8. Topluluk özellikleri:
+   - ~~Karşılama & veda + otomatik rol~~ ✅
+   - Reaksiyon rolleri / butonlu rol menüsü
+   - Ticket sistemi
+   - Seviye/XP sistemi

@@ -9,6 +9,7 @@ a = Analysis(
     hiddenimports=[
         'core.bot_factory',
         'cogs.sayac',
+        'cogs.karsilama',
         'cogs.tavsiye',
         'cogs.moderasyon',
         'cogs.log',

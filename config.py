@@ -75,6 +75,15 @@ default_settings = {
     "youtube_mesaj": "@everyone Yeni video yayında arkadaşlar! Kaçırmayın 🔥\n{link}",
     "son_video_id": "",
     "sil_max_limit": 100,
+    "hosgeldin_kanal": "",
+    "hosgeldin_kanal_id": 0,
+    "hosgeldin_baslik": "👋 Hoş geldin!",
+    "hosgeldin_mesaj": "Sunucumuza hoş geldin {uye}! 🎉",
+    "hosgeldin_renk": "#5865F2",
+    "hosgeldin_rol_id": 0,
+    "veda_kanal": "",
+    "veda_kanal_id": 0,
+    "veda_mesaj": "{uye} aramızdan ayrıldı. Görüşürüz!",
 }
 
 _settings_lock = threading.RLock()

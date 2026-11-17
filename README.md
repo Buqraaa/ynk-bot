@@ -89,6 +89,18 @@ ID bulunamazsa eski davranış olarak kanal adı kullanılır.
 - PyInstaller ile derlenen exe'de `console=False` olduğu için hataları görmek
   için bu dosyaya bak.
 
+### Log kanalına yazılan olaylar
+
+| Olay | Açıklama |
+|------|----------|
+| Mesaj silindi | Silinen mesajın kanalı, yazarı ve içeriği |
+| Toplu mesaj silindi | Son 10 mesajın özeti ve toplam sayı |
+| Mesaj düzenlendi | Eski ve yeni içerik |
+| Ban / unban | Banlanan veya banı kaldırılan kullanıcı |
+| Kanal oluşturma / silme / güncelleme | Ad, konu, yavaş mod, NSFW, kategori |
+| Rol oluşturma / silme / güncelleme | Ad, renk, izinler, görünürlük |
+| Üye güncelleme | Takma ad, rol ekleme/çıkarma, susturma |
+
 ## Derleme (isteğe bağlı)
 
 ```powershell

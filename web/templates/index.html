@@ -421,6 +421,50 @@
                     btn.style.display = btn.innerText.toLowerCase().includes(input) ? 'flex' : 'none';
                 });
             }
+
+            // Bot "Başlatılıyor..." durumundayken sayfa kendini yenilesin.
+            // Böylece kanal ve rol listeleri de otomatik gelir.
+            (function () {
+                const botAktif = {{ "true" if bot_aktif else "false" }};
+                if (botAktif) {
+                    return;
+                }
+
+                const durumYazisi = document.querySelector('.server-info p');
+                let deneme = 0;
+                let zamanlayici = null;
+
+                async function kontrolEt() {
+                    deneme += 1;
+                    try {
+                        const yanit = await fetch('/api/durum', { cache: 'no-store' });
+                        if (!yanit.ok) {
+                            return;
+                        }
+                        const veri = await yanit.json();
+                        if (durumYazisi) {
+                            durumYazisi.textContent = veri.durum;
+                        }
+                        if (veri.hazir && veri.durum === 'Aktif (Çalışıyor)') {
+                            clearInterval(zamanlayici);
+                            window.location.reload();
+                            return;
+                        }
+                        if (veri.durum.includes('Hata') || veri.durum.includes('Token yok')) {
+                            clearInterval(zamanlayici);
+                            window.location.reload();
+                        }
+                    } catch (hata) {
+                        // Panel sunucusu yeniden başlıyor olabilir; sessizce devam et.
+                    }
+                    if (deneme >= 60) {
+                        clearInterval(zamanlayici);
+                    }
+                }
+
+                zamanlayici = setInterval(kontrolEt, 2000);
+                setTimeout(kontrolEt, 400);
+            })();
         </script>
     </body>
     </html>

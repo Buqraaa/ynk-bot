@@ -117,6 +117,7 @@ def panel_ana_sayfa(request: Request):
             "roller": sunucu_rollerini_getir(),
             "ayarlar": BOT_AYARLARI,
             "bot_durumu": durum,
+            "bot_aktif": durum == "Aktif (Çalışıyor)",
             "durum_renk": durum_renk,
             "kod_icerigi": _uzanti_icerigi(),
             "uzanti_durumu": UZANTI_DURUMU["mesaj"],
@@ -125,6 +126,20 @@ def panel_ana_sayfa(request: Request):
             ),
         },
     )
+
+
+@app.get("/api/durum")
+def api_durum():
+    bot = bot_manager.bot
+    return {
+        "durum": bot_manager.status,
+        "hazir": bool(
+            bot
+            and bot.is_ready()
+            and not bot.is_closed()
+            and bot.guilds
+        ),
+    }
 
 
 @app.get("/bot-ac", response_class=RedirectResponse)

@@ -1,0 +1,6 @@
+discord.py
+fastapi
+uvicorn
+jinja2
+pywebview
+pyinstaller

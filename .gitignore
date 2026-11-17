@@ -1,0 +1,21 @@
+# Gizli bilgiler
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.log
+
+# PyInstaller
+build/
+dist/
+*.spec.bak
+
+# Sanal ortam
+.venv/
+venv/
+
+# Yedek / gecici
+_backup/
+*.eski
+*.tmp

@@ -1,0 +1,14 @@
+{
+    "hedef_uye": 1000,
+    "sayac_kanal": "🕒・sayaç",
+    "giris_mesaji": "Sunucumuza hoş geldin {uye}! 🎉",
+    "cikis_mesaji": "{uye} aramızdan ayrıldı.",
+    "tavsiye_kanal": "🪄・tavsiye",
+    "tavsiye_baslik": "✨ Yeni Tavsiye",
+    "log_kanal": "📄・logs",
+    "youtube_kanal": "📢・duyuru",
+    "youtube_channel_id": "@ardinus",
+    "youtube_mesaj": "@everyone Yeni video yayında arkadaşlar! Kaçırmayın 🔥\r\n{link}",
+    "son_video_id": "j0woFLFjlNk",
+    "sil_max_limit": 100
+}

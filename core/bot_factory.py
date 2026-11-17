@@ -4,7 +4,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from config import logger
+from config import BOT_AYARLARI, ayarlari_kaydet, logger
 
 EXTENSIONS = (
     "cogs.sayac",
@@ -12,6 +12,14 @@ EXTENSIONS = (
     "cogs.moderasyon",
     "cogs.log",
     "cogs.youtube",
+)
+
+# Kanal adi -> kanal ID migrasyonu bu anahtarlar icin yapilir.
+KANAL_ANAHTARLARI = (
+    "sayac_kanal",
+    "tavsiye_kanal",
+    "log_kanal",
+    "youtube_kanal",
 )
 
 
@@ -47,11 +55,82 @@ class YNKBot(commands.Bot):
         )
         print(f"[{self.user}] Discord sunucularına başarıyla bağlandı!")
 
+        self._kanal_id_migrasyonu()
+
         if not self._komut_sync_yapildi:
             self._komut_sync_yapildi = True
             self._sync_task = self.loop.create_task(
                 self._komutlari_senkronize_et()
             )
+
+    def _kanal_id_migrasyonu(self):
+        """Kanal adlarindan ID'leri bulup settings.json'a yazar.
+
+        Bu islem yalnizca eksik ID'ler icin calisir; mevcut ID'ler korunur.
+        """
+        if not self.guilds:
+            return
+
+        guild = None
+        guild_id = BOT_AYARLARI.get("guild_id", 0)
+        try:
+            guild_id = int(guild_id)
+        except (TypeError, ValueError):
+            guild_id = 0
+
+        if guild_id:
+            guild = discord.utils.get(self.guilds, id=guild_id)
+        if guild is None:
+            guild = self.guilds[0]
+
+        degisti = False
+
+        if not guild_id:
+            BOT_AYARLARI["guild_id"] = guild.id
+            logger.info("Sunucu ID kaydedildi: %s (%s)", guild.name, guild.id)
+            degisti = True
+
+        for anahtar in KANAL_ANAHTARLARI:
+            if BOT_AYARLARI.get(f"{anahtar}_id"):
+                continue
+
+            ad = (BOT_AYARLARI.get(anahtar) or "").strip()
+            if not ad:
+                continue
+
+            channel = discord.utils.get(
+                guild.text_channels, name=ad.lower()
+            )
+            if channel is None:
+                # Turkce/buyuk harf farki olabilecegi icin tek tek karsilastir.
+                channel = next(
+                    (
+                        c
+                        for c in guild.text_channels
+                        if c.name.lower() == ad.lower()
+                    ),
+                    None,
+                )
+            if channel is None:
+                logger.warning(
+                    "Kanal ID bulunamadi: %s = #%s", anahtar, ad
+                )
+                continue
+
+            BOT_AYARLARI[f"{anahtar}_id"] = channel.id
+            logger.info(
+                "Kanal ID kaydedildi: %s -> #%s (%s)",
+                anahtar,
+                channel.name,
+                channel.id,
+            )
+            degisti = True
+
+        if degisti:
+            try:
+                ayarlari_kaydet(BOT_AYARLARI)
+            except Exception:
+                logger.exception("Kanal ID ayarlari kaydedilemedi")
 
     async def _komutlari_senkronize_et(self):
         for guild in self.guilds:

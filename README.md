@@ -69,6 +69,17 @@ YNK BOT/
 - Canlı duyuru gönderme
 - Kod uzantısı dosyasını düzenleme
 
+### Kanal ID'leri
+
+Ayarlar artık kanal **adı** ile birlikte kanal **ID'sini** de saklar:
+`sayac_kanal_id`, `tavsiye_kanal_id`, `log_kanal_id`, `youtube_kanal_id`.
+Bot ilk bağlandığında eksik ID'leri kanal adından bulup `settings.json`'a
+otomatik yazar. Kanal yeniden adlandırılsa bile sistem çalışmaya devam eder.
+ID bulunamazsa eski davranış olarak kanal adı kullanılır.
+
+> `guild_id` alanı, ayarların hangi sunucuya ait olduğunu belirtir. Bot birden
+> fazla sunucudaysa panel ve duyurular bu sunucuyu kullanır.
+
 > **Not:** "Kod Uzantısı" sekmesi şu an sadece `user_extension.py` dosyasını
 > kaydeder; içindeki kodun otomatik çalıştırılması Faz 2'de eklenecek.
 

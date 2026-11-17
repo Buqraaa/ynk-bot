@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 from discord.ext import commands, tasks
 
 from config import BOT_AYARLARI, ayarlari_kaydet, logger
-from utils import kanal_bul
+from utils import ayarli_kanal
 
 
 def kanal_idsini_coz(girdi):
@@ -120,7 +120,6 @@ class YouTube(commands.Cog):
             BOT_AYARLARI["son_video_id"] = video["id"]
             ayarlari_kaydet(BOT_AYARLARI)
 
-            hedef_kanal = BOT_AYARLARI.get("youtube_kanal", "duyuru")
             sablon = BOT_AYARLARI.get(
                 "youtube_mesaj", "Yeni video yayında! {link}"
             )
@@ -131,7 +130,7 @@ class YouTube(commands.Cog):
                 mesaj_metni = f"{mesaj_metni}\n{video['link']}"
 
             for guild in self.bot.guilds:
-                channel = kanal_bul(guild, hedef_kanal)
+                channel = ayarli_kanal(guild, "youtube_kanal")
                 if channel:
                     try:
                         await channel.send(mesaj_metni)

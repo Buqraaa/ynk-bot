@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from config import BOT_AYARLARI, logger
-from utils import kanal_bul
+from utils import ayarli_kanal
 
 
 class Sayac(commands.Cog):
@@ -11,7 +11,7 @@ class Sayac(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        kanal = kanal_bul(member.guild, BOT_AYARLARI["sayac_kanal"])
+        kanal = ayarli_kanal(member.guild, "sayac_kanal")
         if kanal is None:
             return
 
@@ -37,7 +37,7 @@ class Sayac(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        kanal = kanal_bul(member.guild, BOT_AYARLARI["sayac_kanal"])
+        kanal = ayarli_kanal(member.guild, "sayac_kanal")
         if kanal is None:
             return
 

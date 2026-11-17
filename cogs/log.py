@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
 
-from config import BOT_AYARLARI, logger
-from utils import kanal_bul
+from config import logger
+from utils import ayarli_kanal
 
 
 class Log(commands.Cog):
@@ -15,7 +15,7 @@ class Log(commands.Cog):
         if message.guild is None or message.author.bot:
             return
 
-        kanal = kanal_bul(message.guild, BOT_AYARLARI["log_kanal"])
+        kanal = ayarli_kanal(message.guild, "log_kanal")
         if kanal is None:
             return
 

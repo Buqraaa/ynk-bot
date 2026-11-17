@@ -15,7 +15,7 @@ from config import (
     logger,
 )
 from core.manager import bot_manager
-from utils import kanal_bul
+from utils import ayarli_sunucu, kanal_bul
 
 app = FastAPI()
 templates = Jinja2Templates(directory=str(BUNDLE_DIR / "web" / "templates"))
@@ -24,11 +24,9 @@ templates = Jinja2Templates(directory=str(BUNDLE_DIR / "web" / "templates"))
 def sunucu_kanallarini_getir():
     kanallar = []
     try:
-        bot = bot_manager.bot
-        if bot and bot.guilds:
-            for guild in bot.guilds:
-                for channel in guild.text_channels:
-                    kanallar.append(channel.name)
+        guild = ayarli_sunucu(bot_manager.bot)
+        if guild is not None:
+            kanallar = [channel.name for channel in guild.text_channels]
     except Exception:
         logger.exception("Kanal çekme hatası")
 
@@ -40,6 +38,26 @@ def sunucu_kanallarini_getir():
             BOT_AYARLARI["youtube_kanal"],
         ]
     return sorted(set(kanallar))
+
+
+def _kanal_id_guncelle(anahtar, kanal_adi):
+    """Kanal adi degistiyse ID'yi sifirlar, bot calisiyorsa yenisini bulur."""
+    if BOT_AYARLARI.get(anahtar, "") != kanal_adi:
+        BOT_AYARLARI[f"{anahtar}_id"] = 0
+
+    guild = ayarli_sunucu(bot_manager.bot)
+    if guild is None:
+        return
+
+    channel = kanal_bul(guild, 0, kanal_adi)
+    if channel is not None:
+        BOT_AYARLARI[f"{anahtar}_id"] = channel.id
+        logger.info(
+            "Kanal ID guncellendi: %s -> #%s (%s)",
+            anahtar,
+            channel.name,
+            channel.id,
+        )
 
 
 def _uzanti_icerigi():
@@ -101,6 +119,7 @@ def guncelle_sayac(
     cikis: str = Form(...),
 ):
     BOT_AYARLARI["hedef_uye"] = hedef
+    _kanal_id_guncelle("sayac_kanal", kanal)
     BOT_AYARLARI["sayac_kanal"] = kanal
     BOT_AYARLARI["giris_mesaji"] = giris
     BOT_AYARLARI["cikis_mesaji"] = cikis
@@ -110,6 +129,7 @@ def guncelle_sayac(
 
 @app.post("/guncelle-tavsiye", response_class=RedirectResponse)
 def guncelle_tavsiye(kanal: str = Form(...), baslik: str = Form(...)):
+    _kanal_id_guncelle("tavsiye_kanal", kanal)
     BOT_AYARLARI["tavsiye_kanal"] = kanal
     BOT_AYARLARI["tavsiye_baslik"] = baslik
     _ayarlari_kaydet()
@@ -118,6 +138,7 @@ def guncelle_tavsiye(kanal: str = Form(...), baslik: str = Form(...)):
 
 @app.post("/guncelle-log", response_class=RedirectResponse)
 def guncelle_log(log_kanal: str = Form(...)):
+    _kanal_id_guncelle("log_kanal", log_kanal)
     BOT_AYARLARI["log_kanal"] = log_kanal
     _ayarlari_kaydet()
     return RedirectResponse(url="/", status_code=303)
@@ -135,6 +156,7 @@ def guncelle_youtube(
         BOT_AYARLARI["son_video_id"] = ""
 
     BOT_AYARLARI["youtube_channel_id"] = yeni_giris
+    _kanal_id_guncelle("youtube_kanal", youtube_kanal)
     BOT_AYARLARI["youtube_kanal"] = youtube_kanal
     BOT_AYARLARI["youtube_mesaj"] = youtube_mesaj
     _ayarlari_kaydet()
@@ -156,13 +178,14 @@ def duyuru_gonder(
     loop = bot_manager.loop
 
     if bot and loop and not bot.is_closed() and bot.guilds:
+        guild = ayarli_sunucu(bot)
 
         async def mesaj_at():
-            for guild in bot.guilds:
-                channel = kanal_bul(guild, hedef_kanal)
-                if channel:
-                    await channel.send(duyuru_mesaji)
-                    return
+            channel = kanal_bul(guild, 0, hedef_kanal)
+            if channel:
+                await channel.send(duyuru_mesaji)
+            else:
+                logger.warning("Duyuru kanalı bulunamadı: #%s", hedef_kanal)
 
         try:
             asyncio.run_coroutine_threadsafe(mesaj_at(), loop)

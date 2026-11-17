@@ -59,13 +59,18 @@ logger = logging.getLogger("ynk")
 
 default_settings = {
     "hedef_uye": 1000,
+    "guild_id": 0,
     "sayac_kanal": "genel",
+    "sayac_kanal_id": 0,
     "giris_mesaji": "Sunucumuza hoş geldin {uye}! 🎉",
     "cikis_mesaji": "{uye} aramızdan ayrıldı.",
     "tavsiye_kanal": "genel",
+    "tavsiye_kanal_id": 0,
     "tavsiye_baslik": "✨ Yeni Tavsiye",
     "log_kanal": "genel",
+    "log_kanal_id": 0,
     "youtube_kanal": "duyuru",
+    "youtube_kanal_id": 0,
     "youtube_channel_id": "",
     "youtube_mesaj": "@everyone Yeni video yayında arkadaşlar! Kaçırmayın 🔥\n{link}",
     "son_video_id": "",

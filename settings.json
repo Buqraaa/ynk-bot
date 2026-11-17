@@ -10,5 +10,10 @@
     "youtube_channel_id": "@ardinus",
     "youtube_mesaj": "@everyone Yeni video yayında arkadaşlar! Kaçırmayın 🔥\r\n{link}",
     "son_video_id": "j0woFLFjlNk",
-    "sil_max_limit": 100
+    "sil_max_limit": 100,
+    "guild_id": 1571998270681518201,
+    "sayac_kanal_id": 1572003848602787933,
+    "tavsiye_kanal_id": 1572010489557287114,
+    "log_kanal_id": 1572003850523644015,
+    "youtube_kanal_id": 1572003773893709966
 }

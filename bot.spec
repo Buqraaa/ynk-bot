@@ -7,6 +7,7 @@ a = Analysis(
     binaries=[],
     datas=[('web/templates', 'web/templates')],
     hiddenimports=[
+        'core.bot_factory',
         'cogs.sayac',
         'cogs.tavsiye',
         'cogs.moderasyon',

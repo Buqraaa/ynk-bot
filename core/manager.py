@@ -2,7 +2,7 @@ import asyncio
 import threading
 import time
 
-from config import BOT_TOKEN, logger
+from config import logger, token_oku
 
 
 class BotManager:
@@ -28,7 +28,8 @@ class BotManager:
         with self._lock:
             if self.thread and self.thread.is_alive():
                 return False
-            if not BOT_TOKEN:
+            token = token_oku()
+            if not token:
                 self.status = "Kapalı / Token yok (.env)"
                 logger.error(
                     "DISCORD_TOKEN bulunamadi. .env dosyasindaki token'i kontrol et."
@@ -37,12 +38,12 @@ class BotManager:
 
             self.status = "Başlatılıyor..."
             self.thread = threading.Thread(
-                target=self._run, daemon=True, name="ynk-bot"
+                target=self._run, args=(token,), daemon=True, name="ynk-bot"
             )
             self.thread.start()
             return True
 
-    def _run(self):
+    def _run(self, token):
         loop = asyncio.new_event_loop()
         self.loop = loop
         asyncio.set_event_loop(loop)
@@ -50,7 +51,7 @@ class BotManager:
             from core.bot_factory import create_bot
 
             self.bot = create_bot(self)
-            loop.run_until_complete(self.bot.start(BOT_TOKEN))
+            loop.run_until_complete(self.bot.start(token))
         except Exception:
             logger.exception("Bot başlatma hatası")
             self.status = "Kapalı / Hata"
@@ -71,7 +72,7 @@ class BotManager:
 
             self.bot = None
             self.loop = None
-            if self.status.startswith("Aktif"):
+            if self.status != "Kapalı / Hata":
                 self.status = "Kapalı"
             logger.info("Bot thread'i sonlandı. Durum: %s", self.status)
 
@@ -83,8 +84,7 @@ class BotManager:
 
         if bot and loop and not bot.is_closed():
             try:
-                future = asyncio.run_coroutine_threadsafe(bot.close(), loop)
-                future.result(timeout)
+                asyncio.run_coroutine_threadsafe(bot.close(), loop)
             except Exception:
                 logger.exception("Bot kapatma hatası")
 

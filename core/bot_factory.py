@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -23,6 +25,8 @@ class YNKBot(commands.Bot):
 
         super().__init__(command_prefix="!", intents=intents)
         self.manager = manager
+        self._komut_sync_yapildi = False
+        self._sync_task = None
 
     async def setup_hook(self):
         for extension in EXTENSIONS:
@@ -34,12 +38,6 @@ class YNKBot(commands.Bot):
 
         self.tree.on_error = self.on_app_command_error
 
-        try:
-            synced = await self.tree.sync()
-            logger.info("Slash komutları senkronize edildi: %s", len(synced))
-        except Exception:
-            logger.exception("Komut senkronizasyon hatası")
-
     async def on_ready(self):
         self.manager.status = "Aktif (Çalışıyor)"
         logger.info(
@@ -48,6 +46,57 @@ class YNKBot(commands.Bot):
             self.user.id if self.user else "?",
         )
         print(f"[{self.user}] Discord sunucularına başarıyla bağlandı!")
+
+        if not self._komut_sync_yapildi:
+            self._komut_sync_yapildi = True
+            self._sync_task = self.loop.create_task(
+                self._komutlari_senkronize_et()
+            )
+
+    async def _komutlari_senkronize_et(self):
+        for guild in self.guilds:
+            try:
+                self.tree.copy_global_to(guild=guild)
+                synced = await self.tree.sync(guild=guild)
+                logger.info(
+                    "Komutlar senkronize edildi (%s): %s",
+                    guild.name,
+                    len(synced),
+                )
+            except asyncio.CancelledError:
+                logger.info("Komut senkronizasyonu iptal edildi")
+                raise
+            except Exception:
+                logger.exception(
+                    "Komut senkronizasyon hatası (%s)", guild.name
+                )
+
+    async def close(self):
+        if self._sync_task and not self._sync_task.done():
+            self._sync_task.cancel()
+            try:
+                await self._sync_task
+            except asyncio.CancelledError:
+                pass
+            except Exception:
+                logger.exception(
+                    "Komut senkronizasyonu kapatılırken hata"
+                )
+        await super().close()
+
+    async def on_guild_join(self, guild):
+        try:
+            self.tree.copy_global_to(guild=guild)
+            synced = await self.tree.sync(guild=guild)
+            logger.info(
+                "Yeni sunucuda komutlar senkronize edildi (%s): %s",
+                guild.name,
+                len(synced),
+            )
+        except Exception:
+            logger.exception(
+                "Yeni sunucu komut senkronizasyon hatası (%s)", guild.name
+            )
 
     async def on_disconnect(self):
         if self.manager.status.startswith("Aktif"):

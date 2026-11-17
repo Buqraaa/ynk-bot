@@ -19,7 +19,7 @@ EXTENSION_FILE = APP_DIR / "user_extension.py"
 LOG_FILE = APP_DIR / "bot.log"
 
 
-def _load_env_file(path):
+def _load_env_file(path, override=False):
     """Harici bagimlilik olmadan basit .env okuyucu."""
     try:
         with open(path, "r", encoding="utf-8") as env_file:
@@ -28,15 +28,21 @@ def _load_env_file(path):
                 if not satir or satir.startswith("#") or "=" not in satir:
                     continue
                 anahtar, deger = satir.split("=", 1)
-                os.environ.setdefault(
-                    anahtar.strip(), deger.strip().strip('"').strip("'")
-                )
+                anahtar = anahtar.strip()
+                deger = deger.strip().strip('"').strip("'")
+                if override or anahtar not in os.environ:
+                    os.environ[anahtar] = deger
     except FileNotFoundError:
         pass
 
 
-_load_env_file(APP_DIR / ".env")
-BOT_TOKEN = os.getenv("DISCORD_TOKEN", "").strip()
+def token_oku():
+    """Her bot baslatmasinda .env'yi yeniden okur."""
+    _load_env_file(APP_DIR / ".env", override=True)
+    return os.getenv("DISCORD_TOKEN", "").strip()
+
+
+BOT_TOKEN = token_oku()
 
 _handlers = [logging.StreamHandler()]
 try:

@@ -65,7 +65,8 @@ YNK BOT/
 
 - Botu başlat / kapat / Hot Reset
 - Sayaç sistemi (hedef üye, giriş/çıkış mesajları, kanal)
-- Karşılama & veda (kanal, başlık, mesaj, renk, otomatik rol)
+- Karşılama & veda (kanal, başlık, mesaj, renk, otomatik rol, botları da karşılama)
+- Karşılama test mesajı gönderme
 - Tavsiye sistemi (kanal ve başlık)
 - Mod log kanalı
 - YouTube otomasyonu (`@handle`, link veya `UC...` kanal ID'si)

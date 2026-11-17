@@ -24,6 +24,48 @@ def _mesaj_hazirla(sablon, member):
     )
 
 
+def _karsilama_embed(member, test=False):
+    embed = discord.Embed(
+        title=BOT_AYARLARI.get("hosgeldin_baslik") or "👋 Hoş geldin!",
+        description=_mesaj_hazirla(
+            BOT_AYARLARI.get("hosgeldin_mesaj", "{uye}"), member
+        ),
+        color=_renk_coz(BOT_AYARLARI.get("hosgeldin_renk")),
+        timestamp=discord.utils.utcnow(),
+    )
+    embed.set_thumbnail(url=member.display_avatar.url)
+    embed.add_field(
+        name="👥 Üye Sayısı",
+        value=f"`{member.guild.member_count}`",
+        inline=True,
+    )
+    alt_yazi = f"{member.guild.name} • {member.name}"
+    if test:
+        alt_yazi = "🧪 Test mesajı • " + alt_yazi
+    embed.set_footer(
+        text=alt_yazi,
+        icon_url=member.guild.icon.url if member.guild.icon else None,
+    )
+    return embed
+
+
+async def test_mesaji_gonder(bot, guild):
+    """Paneldeki test butonu icin ornek karşilama mesaji gonderir."""
+    kanal = ayarli_kanal(guild, "hosgeldin_kanal")
+    if kanal is None:
+        raise RuntimeError(
+            "Karşılama kanalı bulunamadı. Panelden kanal seçip kaydet."
+        )
+
+    uye = guild.me
+    if uye is None:
+        raise RuntimeError("Botun sunucu üyeliği bulunamadı")
+
+    embed = _karsilama_embed(uye, test=True)
+    await kanal.send(embed=embed)
+    logger.info("Karşılama test mesajı gönderildi: #%s", kanal.name)
+
+
 class Karsilama(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -58,36 +100,24 @@ class Karsilama(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        if member.bot:
+        botlari_dahil = bool(
+            BOT_AYARLARI.get("hosgeldin_botlari_dahil", False)
+        )
+        if member.bot and not botlari_dahil:
             return
 
-        await self._otomatik_rol_ver(member)
+        if not member.bot:
+            await self._otomatik_rol_ver(member)
 
         kanal = ayarli_kanal(member.guild, "hosgeldin_kanal")
         if kanal is None:
             return
 
-        embed = discord.Embed(
-            title=BOT_AYARLARI.get("hosgeldin_baslik") or "👋 Hoş geldin!",
-            description=_mesaj_hazirla(
-                BOT_AYARLARI.get("hosgeldin_mesaj", "{uye}"), member
-            ),
-            color=_renk_coz(BOT_AYARLARI.get("hosgeldin_renk")),
-            timestamp=discord.utils.utcnow(),
-        )
-        embed.set_thumbnail(url=member.display_avatar.url)
-        embed.add_field(
-            name="👥 Üye Sayısı",
-            value=f"`{member.guild.member_count}`",
-            inline=True,
-        )
-        embed.set_footer(
-            text=f"{member.guild.name} • {member.name}",
-            icon_url=member.guild.icon.url if member.guild.icon else None,
-        )
-
         try:
-            await kanal.send(content=member.mention, embed=embed)
+            await kanal.send(
+                content=member.mention,
+                embed=_karsilama_embed(member),
+            )
         except Exception:
             logger.exception("Karşılama mesajı gönderilemedi")
 

@@ -16,13 +16,14 @@
     "tavsiye_kanal_id": 1572010489557287114,
     "log_kanal_id": 1572003850523644015,
     "youtube_kanal_id": 1572003773893709966,
-    "hosgeldin_kanal": "",
-    "hosgeldin_kanal_id": 0,
+    "hosgeldin_kanal": "👋🏻・hoşgeldin",
+    "hosgeldin_kanal_id": 1572017043283386538,
     "hosgeldin_baslik": "👋 Hoş geldin!",
     "hosgeldin_mesaj": "Sunucumuza hoş geldin {uye}! 🎉",
     "hosgeldin_renk": "#5865F2",
-    "hosgeldin_rol_id": 0,
+    "hosgeldin_rol_id": 1572003739877900432,
     "veda_kanal": "",
     "veda_kanal_id": 0,
-    "veda_mesaj": "{uye} aramızdan ayrıldı. Görüşürüz!"
+    "veda_mesaj": "{uye} aramızdan ayrıldı. Görüşürüz!",
+    "hosgeldin_botlari_dahil": true
 }

@@ -81,6 +81,7 @@ default_settings = {
     "hosgeldin_mesaj": "Sunucumuza hoş geldin {uye}! 🎉",
     "hosgeldin_renk": "#5865F2",
     "hosgeldin_rol_id": 0,
+    "hosgeldin_botlari_dahil": False,
     "veda_kanal": "",
     "veda_kanal_id": 0,
     "veda_mesaj": "{uye} aramızdan ayrıldı. Görüşürüz!",

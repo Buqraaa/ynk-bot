@@ -168,6 +168,7 @@ def guncelle_karsilama(
     hosgeldin_mesaj: str = Form(""),
     hosgeldin_renk: str = Form("#5865F2"),
     hosgeldin_rol_id: int = Form(0),
+    hosgeldin_botlari_dahil: int = Form(0),
     veda_kanal: str = Form(""),
     veda_mesaj: str = Form(""),
 ):
@@ -187,6 +188,9 @@ def guncelle_karsilama(
     BOT_AYARLARI["hosgeldin_renk"] = renk.upper()
 
     BOT_AYARLARI["hosgeldin_rol_id"] = max(0, int(hosgeldin_rol_id))
+    BOT_AYARLARI["hosgeldin_botlari_dahil"] = bool(
+        hosgeldin_botlari_dahil
+    )
 
     _kanal_id_guncelle("veda_kanal", veda_kanal)
     BOT_AYARLARI["veda_kanal"] = veda_kanal
@@ -195,6 +199,31 @@ def guncelle_karsilama(
     )
 
     _ayarlari_kaydet()
+    return RedirectResponse(url="/", status_code=303)
+
+
+@app.post("/karsilama-test", response_class=RedirectResponse)
+def karsilama_test():
+    bot = bot_manager.bot
+    loop = bot_manager.loop
+
+    if not (bot and loop and not bot.is_closed() and bot.guilds):
+        logger.warning("Karşılama testi: bot çalışmıyor")
+        return RedirectResponse(url="/", status_code=303)
+
+    guild = ayarli_sunucu(bot)
+
+    async def gonder():
+        from cogs.karsilama import test_mesaji_gonder
+
+        await test_mesaji_gonder(bot, guild)
+
+    try:
+        future = asyncio.run_coroutine_threadsafe(gonder(), loop)
+        future.result(10)
+    except Exception:
+        logger.exception("Karşılama test mesajı gönderilemedi")
+
     return RedirectResponse(url="/", status_code=303)
 
 

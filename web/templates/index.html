@@ -262,6 +262,10 @@
                 <p class="subtitle">Yeni üyeleri karşıla, otomatik rol ver ve ayrılanları uğurla. Kanal seçmezsen özellik kapalı kalır.</p>
                 <div class="card">
                     <button class="refresh-btn" onclick="window.location.reload();">🔄 Kanalları ve Rolleri Yenile</button>
+                    <form action="/karsilama-test" method="post" style="margin-bottom: 16px;">
+                        <button type="submit" class="refresh-btn">🧪 Test Mesajı Gönder</button>
+                        <p style="color: #94a3b8; font-size: 12px; margin: 6px 0 0;">Bot çalışırken seçili kanala örnek bir karşılama mesajı gönderir.</p>
+                    </form>
                     <form action="/guncelle-karsilama" method="post">
                         <label>Karşılama Kanalı:</label>
                         <select name="hosgeldin_kanal">
@@ -281,6 +285,10 @@
                             {% for r in roller %}<option value="{{ r.id }}" {% if r.id == ayarlar.hosgeldin_rol_id %}selected{% endif %}>@{{ r.name }}</option>{% endfor %}
                         </select>
                         {% if not roller %}<p style="color: #f59e0b; font-size: 12px; margin-top: -6px;">Rol listesi için botun çalışıyor olması gerekir.</p>{% endif %}
+                        <label style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                            <input type="checkbox" name="hosgeldin_botlari_dahil" value="1" style="width: auto; margin: 0;" {% if ayarlar.hosgeldin_botlari_dahil %}checked{% endif %}>
+                            Bot hesaplarını da karşıla
+                        </label>
                         <label>Veda Kanalı:</label>
                         <select name="veda_kanal">
                             <option value="" {% if not ayarlar.veda_kanal %}selected{% endif %}>Kapalı</option>

@@ -44,6 +44,10 @@ class YNKBot(commands.Bot):
             except Exception:
                 logger.exception("Eklenti yüklenemedi: %s", extension)
 
+        from core.user_extension import uzantiyi_yukle
+
+        await uzantiyi_yukle(self)
+
         self.tree.on_error = self.on_app_command_error
 
     async def on_ready(self):

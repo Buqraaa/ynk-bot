@@ -15,6 +15,7 @@ from config import (
     logger,
 )
 from core.manager import bot_manager
+from core.user_extension import DURUM as UZANTI_DURUMU
 from utils import ayarli_sunucu, kanal_bul
 
 app = FastAPI()
@@ -63,7 +64,12 @@ def _kanal_id_guncelle(anahtar, kanal_adi):
 def _uzanti_icerigi():
     if not os.path.exists(EXTENSION_FILE):
         with open(EXTENSION_FILE, "w", encoding="utf-8") as f:
-            f.write("# Buraya dilediğin ek Python kodlarını yazabilirsin.\n")
+            f.write(
+                "# Buraya dilediğin ek Python kodlarını yazabilirsin.\n"
+                "# Ornek:\n"
+                "# async def setup(bot):\n"
+                "#     ...\n"
+            )
     with open(EXTENSION_FILE, "r", encoding="utf-8") as f:
         return f.read()
 
@@ -89,6 +95,10 @@ def panel_ana_sayfa(request: Request):
             "bot_durumu": durum,
             "durum_renk": durum_renk,
             "kod_icerigi": _uzanti_icerigi(),
+            "uzanti_durumu": UZANTI_DURUMU["mesaj"],
+            "uzanti_renk": (
+                "#10b981" if UZANTI_DURUMU["yuklendi"] else "#f59e0b"
+            ),
         },
     )
 
@@ -202,8 +212,11 @@ def guncelle_kod(yeni_kod: str = Form(...)):
     try:
         with open(EXTENSION_FILE, "w", encoding="utf-8") as f:
             f.write(yeni_kod)
+        UZANTI_DURUMU["yuklendi"] = False
+        UZANTI_DURUMU["mesaj"] = "Kaydedildi; bot yeniden başlatılıyor..."
     except Exception:
         logger.exception("Kod kaydetme hatası")
+        UZANTI_DURUMU["mesaj"] = "Kod kaydedilemedi (bot.log'a bak)"
     return RedirectResponse(url="/bot-reset", status_code=303)
 
 

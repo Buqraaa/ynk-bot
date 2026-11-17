@@ -32,7 +32,8 @@ YNK BOT/
 ├── utils.py                # Ortak yardımcılar (kanal bulma, escape)
 ├── core/
 │   ├── manager.py          # Botu ayrı thread'de başlat/durdur/yeniden başlat
-│   └── bot_factory.py      # Discord botu ve hata yönetimi
+│   ├── bot_factory.py      # Discord botu ve hata yönetimi
+│   └── user_extension.py   # Kullanıcı kod uzantısını yükleme
 ├── cogs/
 │   ├── sayac.py            # Üye giriş/çıkış sayaç sistemi
 │   ├── tavsiye.py          # /tavsiye komutu
@@ -80,8 +81,10 @@ ID bulunamazsa eski davranış olarak kanal adı kullanılır.
 > `guild_id` alanı, ayarların hangi sunucuya ait olduğunu belirtir. Bot birden
 > fazla sunucudaysa panel ve duyurular bu sunucuyu kullanır.
 
-> **Not:** "Kod Uzantısı" sekmesi şu an sadece `user_extension.py` dosyasını
-> kaydeder; içindeki kodun otomatik çalıştırılması Faz 2'de eklenecek.
+> **Kod Uzantısı:** `user_extension.py` içindeki kod bot her başladığında
+> otomatik çalışır. Dosyada `async def setup(bot)` tanımlarsan bu fonksiyon
+> çağrılır; içinde `await bot.add_cog(...)` ile yeni özellik ekleyebilirsin.
+> Kodda hata olursa bot durmaz, hata panelde ve `bot.log` dosyasında görünür.
 
 ## Loglar
 
@@ -130,10 +133,10 @@ Masaüstü\YNK BOT - Yedek (2026-11-17)
 
 ## Faz 2 yol haritası
 
-1. "Kod Uzantısı" sekmesini gerçekten çalıştırma (veya kaldırma)
-2. Hot Reset'i daha güvenilir hale getirme
-3. Log sistemini tamamlama (ban, kick, mesaj düzenleme, kanal/rol olayları)
-4. Kanal adları yerine kanal ID'leri
+1. ~~"Kod Uzantısı" sekmesini gerçekten çalıştırma~~ ✅
+2. ~~Hot Reset'i daha güvenilir hale getirme~~ ✅
+3. ~~Log sistemini tamamlama (ban, kick, mesaj düzenleme, kanal/rol olayları)~~ ✅
+4. ~~Kanal adları yerine kanal ID'leri~~ ✅
 5. SQLite veritabanı + sunucu bazlı ayarlar
 6. Moderasyon komutları (ban, kick, timeout, warn)
 7. Otomatik moderasyon (spam, reklam, küfür, raid)

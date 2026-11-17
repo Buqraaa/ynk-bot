@@ -336,11 +336,12 @@
             <!-- KOD UZANTISI -->
             <div id="kod" class="tab-pane">
                 <h1>💻 Harici Python Kod Editörü (Extension)</h1>
-                <p class="subtitle">Buraya yazdığın kodlar güvenli alanda saklanır ve botu genişletir.</p>
+                <p class="subtitle">Buraya yazdığın kodlar bot her başladığında otomatik çalışır. Hata olursa bot durmaz; durum aşağıda ve bot.log dosyasında görünür.</p>
+                <p style="color: {{ uzanti_renk }}; font-weight: 600; margin-bottom: 12px;">Durum: {{ uzanti_durumu }}</p>
                 <div class="card">
                     <form action="/guncelle-kod" method="post">
                         <textarea class="code-editor" name="yeni_kod">{{ kod_icerigi }}</textarea><br><br>
-                        <button type="submit" class="save-btn">💾 Kodu Kaydet ve Hot Reset Uygula</button>
+                        <button type="submit" class="save-btn">💾 Kodu Kaydet ve Botu Yeniden Başlat</button>
                     </form>
                 </div>
             </div>

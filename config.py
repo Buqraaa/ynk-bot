@@ -22,7 +22,7 @@ LOG_FILE = APP_DIR / "bot.log"
 def _load_env_file(path, override=False):
     """Harici bagimlilik olmadan basit .env okuyucu."""
     try:
-        with open(path, "r", encoding="utf-8") as env_file:
+        with open(path, "r", encoding="utf-8-sig") as env_file:
             for satir in env_file:
                 satir = satir.strip()
                 if not satir or satir.startswith("#") or "=" not in satir:
@@ -79,7 +79,7 @@ def ayarlari_yukle():
     with _settings_lock:
         if CONFIG_FILE.exists():
             try:
-                with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                with open(CONFIG_FILE, "r", encoding="utf-8-sig") as f:
                     data = json.load(f)
                 for anahtar, deger in default_settings.items():
                     if anahtar not in data:

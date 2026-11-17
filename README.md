@@ -107,14 +107,33 @@ ID bulunamazsa eski davranış olarak kanal adı kullanılır.
 | Rol oluşturma / silme / güncelleme | Ad, renk, izinler, görünürlük |
 | Üye güncelleme | Takma ad, rol ekleme/çıkarma, susturma |
 
-## Derleme (isteğe bağlı)
+## EXE olarak çalıştırma (tek tık)
+
+- `YNK-BOT.exe` dosyasına çift tıkla → panel penceresi açılır.
+- Masaüstündeki **YNK BOT** kısayolu da aynı exe'yi açar.
+- `.env`, `settings.json` ve `user_extension.py` exe ile aynı klasörde kalmalı.
+- İlk açılışta Windows "Bilinmeyen yayıncı" uyarısı verebilir:
+  **Daha fazla bilgi → Yine de çalıştır**.
+
+### Kod değiştirme
+
+| Ne yapmak istiyorsun? | Yol |
+|---|---|
+| Küçük ekleme/deneme | Panel → **Kod Uzantısı** → kaydet (bot yeniden başlar, exe gerekmez) |
+| Kaynak koddan hızlı çalıştırma | `GELISTIR.bat` çift tık (kod değişiklikleri hemen geçerli) |
+| Yeni exe üretme | `DERLE.bat` çift tık → `YNK-BOT.exe` güncellenir (1-2 dk) |
+
+> Exe'nin içindeki kodu doğrudan düzenleyemezsin. Kaynak `.py` dosyalarını
+> düzenleyip `DERLE.bat` ile yeniden paketle. Derlemeden önce uygulamayı kapat.
+
+### Manuel derleme
 
 ```powershell
-pyinstaller bot.spec
+python -m PyInstaller --noconfirm --clean bot.spec
+copy dist\bot.exe YNK-BOT.exe
 ```
 
-- Çıktı: `dist/bot.exe`
-- `.env` ve `settings.json` dosyaları `bot.exe` ile aynı klasörde olmalı.
+- `.env` ve `settings.json` dosyaları exe ile aynı klasörde olmalı.
 - Şablonlar exe içine gömülür.
 
 ## Git ile geri dönüş

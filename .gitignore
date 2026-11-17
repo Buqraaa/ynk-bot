@@ -10,6 +10,7 @@ __pycache__/
 build/
 dist/
 *.spec.bak
+/YNK-BOT.exe
 
 # Sanal ortam
 .venv/

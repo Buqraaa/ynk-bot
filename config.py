@@ -11,17 +11,22 @@ import db
 # bundle klasorunde durur. Gelistirme sirasinda ikisi de proje klasorundedir.
 # Sunucu ortamlarinda (Railway, Docker) veri dizini env var ile degistirilebilir.
 # Boylece volume mount edilen klasore ayarlar/DB yazilir ve restart'ta kaybolmaz.
+# BUNDLE_DIR: kodun/sablonlarin bulundugu dizin (her zaman kod dizini)
+if getattr(sys, "frozen", False):
+    _code_dir = Path(sys.executable).resolve().parent
+    BUNDLE_DIR = Path(getattr(sys, "_MEIPASS", _code_dir))
+else:
+    _code_dir = Path(__file__).resolve().parent
+    BUNDLE_DIR = _code_dir
+
+# APP_DIR: veri dosyalarinin (settings, DB) yazilacagi dizin
+# Sunucu ortamlarinda (Railway, Docker) env var ile degistirilebilir
 _data_dir_env = os.environ.get("DATA_DIR", "").strip()
 if _data_dir_env:
     APP_DIR = Path(_data_dir_env).resolve()
     APP_DIR.mkdir(parents=True, exist_ok=True)
-    BUNDLE_DIR = APP_DIR
-elif getattr(sys, "frozen", False):
-    APP_DIR = Path(sys.executable).resolve().parent
-    BUNDLE_DIR = Path(getattr(sys, "_MEIPASS", APP_DIR))
 else:
-    APP_DIR = Path(__file__).resolve().parent
-    BUNDLE_DIR = APP_DIR
+    APP_DIR = _code_dir
 
 CONFIG_FILE = APP_DIR / "settings.json"
 EXTENSION_FILE = APP_DIR / "user_extension.py"

@@ -13,8 +13,9 @@ RUN mkdir -p /app/data
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Proje dosyalari
+# Proje dosyalari (cache bust: v3)
 COPY . .
+RUN echo "build-v3"
 
 # Veri dizini (Railway volume mount edilirse /app/data kullanilir)
 ENV DATA_DIR=/app/data

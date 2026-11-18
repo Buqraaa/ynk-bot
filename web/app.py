@@ -197,7 +197,7 @@ def guncelle_sayac(
     BOT_AYARLARI["giris_mesaji"] = giris
     BOT_AYARLARI["cikis_mesaji"] = cikis
     _ayarlari_kaydet()
-    return RedirectResponse(url="/#sayac", status_code=303)
+    return RedirectResponse(url="/?tab=sayac", status_code=303)
 
 
 @app.post("/guncelle-karsilama", response_class=RedirectResponse)
@@ -249,7 +249,7 @@ def guncelle_karsilama(
     )
 
     _ayarlari_kaydet()
-    return RedirectResponse(url="/#karsilama", status_code=303)
+    return RedirectResponse(url="/?tab=karsilama", status_code=303)
 
 
 @app.post("/karsilama-test", response_class=RedirectResponse)
@@ -259,7 +259,7 @@ def karsilama_test():
 
     if not (bot and loop and not bot.is_closed() and bot.guilds):
         logger.warning("Karşılama testi: bot çalışmıyor")
-        return RedirectResponse(url="/#karsilama", status_code=303)
+        return RedirectResponse(url="/?tab=karsilama", status_code=303)
 
     guild = ayarli_sunucu(bot)
 
@@ -274,7 +274,7 @@ def karsilama_test():
     except Exception:
         logger.exception("Karşılama test mesajı gönderilemedi")
 
-    return RedirectResponse(url="/#karsilama", status_code=303)
+    return RedirectResponse(url="/?tab=karsilama", status_code=303)
 
 
 @app.post("/guncelle-tavsiye", response_class=RedirectResponse)
@@ -283,7 +283,7 @@ def guncelle_tavsiye(kanal: str = Form(...), baslik: str = Form(...)):
     BOT_AYARLARI["tavsiye_kanal"] = kanal
     BOT_AYARLARI["tavsiye_baslik"] = baslik
     _ayarlari_kaydet()
-    return RedirectResponse(url="/#tavsiye", status_code=303)
+    return RedirectResponse(url="/?tab=tavsiye", status_code=303)
 
 
 @app.post("/guncelle-log", response_class=RedirectResponse)
@@ -291,7 +291,7 @@ def guncelle_log(log_kanal: str = Form(...)):
     _kanal_id_guncelle("log_kanal", log_kanal)
     BOT_AYARLARI["log_kanal"] = log_kanal
     _ayarlari_kaydet()
-    return RedirectResponse(url="/#log", status_code=303)
+    return RedirectResponse(url="/?tab=log", status_code=303)
 
 
 @app.post("/ticket-panel-gonder", response_class=RedirectResponse)
@@ -315,7 +315,7 @@ def ticket_panel_gonder_route(
     loop = bot_manager.loop
     if not (bot and loop and not bot.is_closed() and bot.guilds):
         logger.warning("Ticket paneli gönderilemedi: bot çalışmıyor")
-        return RedirectResponse(url="/#ticket", status_code=303)
+        return RedirectResponse(url="/?tab=ticket", status_code=303)
 
     guild = ayarli_sunucu(bot)
 
@@ -329,7 +329,7 @@ def ticket_panel_gonder_route(
     except Exception:
         logger.exception("Ticket paneli gönderilemedi")
 
-    return RedirectResponse(url="/#ticket", status_code=303)
+    return RedirectResponse(url="/?tab=ticket", status_code=303)
 
 
 @app.post("/guncelle-youtube", response_class=RedirectResponse)
@@ -348,7 +348,7 @@ def guncelle_youtube(
     BOT_AYARLARI["youtube_kanal"] = youtube_kanal
     BOT_AYARLARI["youtube_mesaj"] = youtube_mesaj
     _ayarlari_kaydet()
-    return RedirectResponse(url="/#youtube", status_code=303)
+    return RedirectResponse(url="/?tab=youtube", status_code=303)
 
 
 @app.post("/guncelle-muzik", response_class=RedirectResponse)
@@ -359,14 +359,14 @@ def guncelle_muzik(
     BOT_AYARLARI["muzik_varsayilan_ses"] = max(0, min(100, int(muzik_varsayilan_ses)))
     BOT_AYARLARI["muzik_max_kuyruk"] = max(1, min(200, int(muzik_max_kuyruk)))
     _ayarlari_kaydet()
-    return RedirectResponse(url="/#muzik", status_code=303)
+    return RedirectResponse(url="/?tab=muzik", status_code=303)
 
 
 @app.post("/guncelle-komutlar", response_class=RedirectResponse)
 def guncelle_komutlar(sil_max_limit: int = Form(...)):
     BOT_AYARLARI["sil_max_limit"] = max(1, min(100, sil_max_limit))
     _ayarlari_kaydet()
-    return RedirectResponse(url="/#komutlar", status_code=303)
+    return RedirectResponse(url="/?tab=komutlar", status_code=303)
 
 
 @app.post("/guncelle-moderasyon", response_class=RedirectResponse)
@@ -377,7 +377,7 @@ def guncelle_moderasyon(
     BOT_AYARLARI["mod_timeout_varsayilan"] = max(1, min(40320, int(mod_timeout_varsayilan)))
     BOT_AYARLARI["mod_uyari_limit"] = max(0, min(100, int(mod_uyari_limit)))
     _ayarlari_kaydet()
-    return RedirectResponse(url="/#komutlar", status_code=303)
+    return RedirectResponse(url="/?tab=komutlar", status_code=303)
 
 
 @app.post("/duyuru-gonder", response_class=RedirectResponse)
@@ -404,7 +404,7 @@ def duyuru_gonder(
     else:
         logger.warning("Duyuru gönderilemedi: bot çalışmıyor")
 
-    return RedirectResponse(url="/#duyuru", status_code=303)
+    return RedirectResponse(url="/?tab=duyuru", status_code=303)
 
 
 @app.post("/guncelle-kod", response_class=RedirectResponse)

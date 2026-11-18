@@ -406,6 +406,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 .chk input { width: auto; margin: 0; }
 </style>
 </head>
+{% set active_tab = request.query_params.get("tab", "home") %}
 <body>
 
 <div class="bg-anim"><canvas id="snowCanvas"></canvas><div class="frost"></div></div>
@@ -431,22 +432,22 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 
     <div class="menu">
         <div class="menu-group">Genel</div>
-        <button class="menu-btn active" onclick="switchTab('home', this)">🏠 Genel Bakış</button>
-        <button class="menu-btn" onclick="switchTab('komutlar', this)">⌨️ Komutlar</button>
-        <button class="menu-btn" onclick="switchTab('kilavuz', this)">📖 Kılavuz</button>
+        <button class="menu-btn{% if active_tab == 'home' %} active{% endif %}" onclick="switchTab('home', this)">🏠 Genel Bakış</button>
+        <button class="menu-btn{% if active_tab == 'komutlar' %} active{% endif %}" onclick="switchTab('komutlar', this)">⌨️ Komutlar</button>
+        <button class="menu-btn{% if active_tab == 'kilavuz' %} active{% endif %}" onclick="switchTab('kilavuz', this)">📖 Kılavuz</button>
 
         <div class="menu-group">Modüller</div>
-        <button class="menu-btn" onclick="switchTab('sayac', this)">📊 Sayaç</button>
-        <button class="menu-btn" onclick="switchTab('karsilama', this)">👋 Karşılama</button>
-        <button class="menu-btn" onclick="switchTab('tavsiye', this)">💡 Tavsiye</button>
-        <button class="menu-btn" onclick="switchTab('log', this)">🛡️ Mod Log</button>
-        <button class="menu-btn" onclick="switchTab('youtube', this)">📺 YouTube</button>
-        <button class="menu-btn" onclick="switchTab('duyuru', this)">📢 Duyuru</button>
-        <button class="menu-btn" onclick="switchTab('ticket', this)">🎫 Ticket</button>
-        <button class="menu-btn" onclick="switchTab('muzik', this)">🎵 Müzik</button>
+        <button class="menu-btn{% if active_tab == 'sayac' %} active{% endif %}" onclick="switchTab('sayac', this)">📊 Sayaç</button>
+        <button class="menu-btn{% if active_tab == 'karsilama' %} active{% endif %}" onclick="switchTab('karsilama', this)">👋 Karşılama</button>
+        <button class="menu-btn{% if active_tab == 'tavsiye' %} active{% endif %}" onclick="switchTab('tavsiye', this)">💡 Tavsiye</button>
+        <button class="menu-btn{% if active_tab == 'log' %} active{% endif %}" onclick="switchTab('log', this)">🛡️ Mod Log</button>
+        <button class="menu-btn{% if active_tab == 'youtube' %} active{% endif %}" onclick="switchTab('youtube', this)">📺 YouTube</button>
+        <button class="menu-btn{% if active_tab == 'duyuru' %} active{% endif %}" onclick="switchTab('duyuru', this)">📢 Duyuru</button>
+        <button class="menu-btn{% if active_tab == 'ticket' %} active{% endif %}" onclick="switchTab('ticket', this)">🎫 Ticket</button>
+        <button class="menu-btn{% if active_tab == 'muzik' %} active{% endif %}" onclick="switchTab('muzik', this)">🎵 Müzik</button>
 
         <div class="menu-group">Gelişmiş</div>
-        <button class="menu-btn" onclick="switchTab('kod', this)">💻 Kod Uzantısı</button>
+        <button class="menu-btn{% if active_tab == 'kod' %} active{% endif %}" onclick="switchTab('kod', this)">💻 Kod Uzantısı</button>
     </div>
 
     <div class="sidebar-foot">YNK Studio v3.2</div>
@@ -463,7 +464,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
     <div class="content">
 
 <!-- GENEL BAKIŞ -->
-<div id="home" class="tab active">
+<div id="home" class="tab{% if active_tab == 'home' %} active{% endif %}">
     <div class="hero">
         <h2>👋 Hoş geldin, YNK Studio</h2>
         <p>Sunucu modüllerini yönet, botu kontrol et, özellikleri yapılandır.</p>
@@ -530,7 +531,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 </div>
 
 <!-- KOMUTLAR -->
-<div id="komutlar" class="tab">
+<div id="komutlar" class="tab{% if active_tab == 'komutlar' %} active{% endif %}">
     <div class="page-head">
         <h1>Komut Yönetimi</h1>
         <p>Tüm slash komutları ve ayarları.</p>
@@ -607,7 +608,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 </div>
 
 <!-- KILAVUZ -->
-<div id="kilavuz" class="tab">
+<div id="kilavuz" class="tab{% if active_tab == 'kilavuz' %} active{% endif %}">
     <div class="page-head">
         <h1>Kılavuz</h1>
         <p>Tüm özellikler, kullanım yolları ve ayar açıklamaları.</p>
@@ -668,7 +669,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 </div>
 
 <!-- SAYAÇ -->
-<div id="sayac" class="tab">
+<div id="sayac" class="tab{% if active_tab == 'sayac' %} active{% endif %}">
     <div class="page-head">
         <h1>Sayaç Sistemi</h1>
         <p>Üye hedeflerini ve duyuru kanalını yapılandır.</p>
@@ -690,7 +691,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 </div>
 
 <!-- KARŞILAMA -->
-<div id="karsilama" class="tab">
+<div id="karsilama" class="tab{% if active_tab == 'karsilama' %} active{% endif %}">
     <div class="page-head">
         <h1>Karşılama & Veda</h1>
         <p>Yeni üyeleri karşıla, otomatik rol ver ve ayrılanları uğurla.</p>
@@ -741,7 +742,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 </div>
 
 <!-- TAVSİYE -->
-<div id="tavsiye" class="tab">
+<div id="tavsiye" class="tab{% if active_tab == 'tavsiye' %} active{% endif %}">
     <div class="page-head">
         <h1>Tavsiye Sistemi</h1>
         <p>Kullanıcıların tavsiye bırakabileceği özel kanal.</p>
@@ -759,7 +760,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 </div>
 
 <!-- MOD LOG -->
-<div id="log" class="tab">
+<div id="log" class="tab{% if active_tab == 'log' %} active{% endif %}">
     <div class="page-head">
         <h1>Mod Log (Denetim Günlüğü)</h1>
         <p>Sunucu içi güvenlik ve moderasyon olaylarının raporlandığı kanal.</p>
@@ -775,7 +776,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 </div>
 
 <!-- YOUTUBE -->
-<div id="youtube" class="tab">
+<div id="youtube" class="tab{% if active_tab == 'youtube' %} active{% endif %}">
     <div class="page-head">
         <h1>YouTube Otomatik Bildirim</h1>
         <p>Kanal linkini, @handle veya ID'sini yapıştır; yeni içerikleri otomatik duyursun.</p>
@@ -805,7 +806,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 </div>
 
 <!-- DUYURU -->
-<div id="duyuru" class="tab">
+<div id="duyuru" class="tab{% if active_tab == 'duyuru' %} active{% endif %}">
     <div class="page-head">
         <h1>Canlı Duyuru Gönder</h1>
         <p>Discord'a girmeden doğrudan bu panelden istediğin kanala etiketli duyuru gönder.</p>
@@ -828,7 +829,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 </div>
 
 <!-- TICKET -->
-<div id="ticket" class="tab">
+<div id="ticket" class="tab{% if active_tab == 'ticket' %} active{% endif %}">
     <div class="page-head">
         <h1>Ticket (Destek) Sistemi</h1>
         <p>Üyeler butona tıklayarak özel destek kanalı açabilir.</p>
@@ -861,7 +862,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 </div>
 
 <!-- MÜZİK -->
-<div id="muzik" class="tab">
+<div id="muzik" class="tab{% if active_tab == 'muzik' %} active{% endif %}">
     <div class="page-head">
         <h1>Müzik Sistemi</h1>
         <p>Ses kanalında müzik çal, kuyruk yönet, ses ayarla.</p>
@@ -879,7 +880,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 </div>
 
 <!-- KOD UZANTISI -->
-<div id="kod" class="tab">
+<div id="kod" class="tab{% if active_tab == 'kod' %} active{% endif %}">
     <div class="page-head">
         <h1>Harici Python Kod Editörü</h1>
         <p>Buraya yazdığın kodlar bot her başladığında otomatik çalışır.</p>
@@ -1082,8 +1083,18 @@ document.addEventListener('click', function(e) {
 });
 
 window.addEventListener('load', function () {
+    // Query param ile tab belirlenmişse zaten server-side aktif, JS'ye gerek yok
+    // Ama hash varsa (eski linkler) de destekle
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam) {
+        const btn = Array.from(document.querySelectorAll('.menu-btn')).find(
+            b => (b.getAttribute('onclick') || '').includes("'" + tabParam + "'")
+        );
+        if (btn) switchTab(tabParam, btn);
+    }
     const hash = window.location.hash.replace('#', '');
-    if (hash) {
+    if (hash && !tabParam) {
         const btn = Array.from(document.querySelectorAll('.menu-btn')).find(
             b => (b.getAttribute('onclick') || '').includes("'" + hash + "'")
         );

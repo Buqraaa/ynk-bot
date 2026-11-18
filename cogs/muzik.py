@@ -112,13 +112,23 @@ def _extract(query):
         opts_search["cookiefile"] = cookies
     # format kisitlamasini kaldir (search'te format onemli degil)
     opts_search.pop("format", None)
+    opts_search["extract_flat"] = "in_playlist"
+    opts_search["skip_download"] = True
     with yt_dlp.YoutubeDL(opts_search) as ydl:
         info = ydl.extract_info(query, download=False)
         if "entries" in info and info["entries"]:
             info = info["entries"][0]
-        video_url = info.get("webpage_url") or info.get("url")
+        video_id = info.get("id") or info.get("url", "").split("v=")[-1].split("&")[0]
+        if not video_id or video_id == query:
+            # URL'den ID cikar
+            url = info.get("url", "")
+            if "v=" in url:
+                video_id = url.split("v=")[-1].split("&")[0]
+            elif "youtu.be/" in url:
+                video_id = url.split("youtu.be/")[-1].split("?")[0]
+        video_url = f"https://www.youtube.com/watch?v={video_id}" if video_id else (info.get("webpage_url") or info.get("url"))
         title = info.get("title", "Bilinmeyen")
-        duration = info.get("duration", 0)
+        duration = info.get("duration", 0) or 0
 
     # 2. Ses URL'si cekme: sirayla farkli client'lar dene (bot engelini asar)
     clients = [

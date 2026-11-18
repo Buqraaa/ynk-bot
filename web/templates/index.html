@@ -46,7 +46,7 @@ body {
 }
 body.ready { visibility: visible; }
 
-/* animated background - winter + cursor glow */
+/* animated background - winter snow canvas */
 .bg-anim {
     position: fixed;
     inset: 0;
@@ -54,32 +54,28 @@ body.ready { visibility: visible; }
     overflow: hidden;
     pointer-events: none;
 }
-.bg-anim .snow {
+#snowCanvas {
     position: absolute;
-    border-radius: 50%;
-    background: rgba(200, 220, 255, 0.5);
-    animation: snowFall linear infinite;
+    inset: 0;
+    width: 100%;
+    height: 100%;
 }
-.bg-anim .snow:nth-child(1) { width: 4px; height: 4px; left: 5%; animation-duration: 12s; animation-delay: 0s; }
-.bg-anim .snow:nth-child(2) { width: 3px; height: 3px; left: 12%; animation-duration: 15s; animation-delay: -2s; }
-.bg-anim .snow:nth-child(3) { width: 5px; height: 5px; left: 20%; animation-duration: 18s; animation-delay: -5s; opacity: 0.7; }
-.bg-anim .snow:nth-child(4) { width: 2px; height: 2px; left: 28%; animation-duration: 14s; animation-delay: -8s; }
-.bg-anim .snow:nth-child(5) { width: 4px; height: 4px; left: 35%; animation-duration: 16s; animation-delay: -3s; }
-.bg-anim .snow:nth-child(6) { width: 3px; height: 3px; left: 42%; animation-duration: 20s; animation-delay: -10s; opacity: 0.6; }
-.bg-anim .snow:nth-child(7) { width: 5px; height: 5px; left: 50%; animation-duration: 13s; animation-delay: -1s; }
-.bg-anim .snow:nth-child(8) { width: 2px; height: 2px; left: 58%; animation-duration: 17s; animation-delay: -6s; }
-.bg-anim .snow:nth-child(9) { width: 4px; height: 4px; left: 65%; animation-duration: 19s; animation-delay: -12s; opacity: 0.7; }
-.bg-anim .snow:nth-child(10) { width: 3px; height: 3px; left: 72%; animation-duration: 15s; animation-delay: -4s; }
-.bg-anim .snow:nth-child(11) { width: 5px; height: 5px; left: 80%; animation-duration: 22s; animation-delay: -9s; opacity: 0.5; }
-.bg-anim .snow:nth-child(12) { width: 2px; height: 2px; left: 88%; animation-duration: 16s; animation-delay: -7s; }
-.bg-anim .snow:nth-child(13) { width: 4px; height: 4px; left: 95%; animation-duration: 14s; animation-delay: -14s; }
-.bg-anim .snow:nth-child(14) { width: 3px; height: 3px; left: 3%; animation-duration: 21s; animation-delay: -11s; opacity: 0.6; }
-.bg-anim .snow:nth-child(15) { width: 5px; height: 5px; left: 48%; animation-duration: 18s; animation-delay: -16s; opacity: 0.4; }
-@keyframes snowFall {
-    0% { transform: translateY(-10vh) translateX(0); opacity: 0; }
-    10% { opacity: 0.8; }
-    90% { opacity: 0.8; }
-    100% { transform: translateY(105vh) translateX(15px); opacity: 0; }
+/* custom cursor */
+body, body * {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='4' fill='rgba(88,101,242,0.8)'/%3E%3Ccircle cx='10' cy='10' r='8' fill='none' stroke='rgba(88,101,242,0.3)' stroke-width='1'/%3E%3C/svg%3E") 10 10, auto;
+}
+/* cursor glow */
+.cursor-glow {
+    position: fixed;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(88,101,242,0.10) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+    transform: translate(-50%, -50%);
+    transition: none;
+    will-change: transform;
 }
 /* frost overlay */
 .bg-anim .frost {
@@ -412,7 +408,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 </head>
 <body>
 
-<div class="bg-anim"><div class="frost"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow-pile"></div></div>
+<div class="bg-anim"><canvas id="snowCanvas"></canvas><div class="frost"></div></div>
 <div class="cursor-glow" id="cursorGlow"></div>
 
 <div class="sidebar">
@@ -950,6 +946,108 @@ function filterPlugins() {
     }
     zamanlayici = setInterval(kontrolEt, 2000);
     setTimeout(kontrolEt, 400);
+})();
+
+// Canvas-based snow with accumulation
+(function() {
+    var canvas = document.getElementById('snowCanvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var W, H;
+    function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    var flakes = [];
+    var pile = []; // accumulated snow at bottom
+    var MAX_FLAKES = 60;
+    var PILE_HEIGHT = 0;
+
+    function createFlake() {
+        return {
+            x: Math.random() * W,
+            y: -10,
+            r: Math.random() * 2.5 + 1,
+            speed: Math.random() * 1 + 0.5,
+            drift: Math.random() * 0.5 - 0.25,
+            opacity: Math.random() * 0.4 + 0.3
+        };
+    }
+
+    for (var i = 0; i < MAX_FLAKES; i++) {
+        var f = createFlake();
+        f.y = Math.random() * H;
+        flakes.push(f);
+    }
+
+    function update() {
+        ctx.clearRect(0, 0, W, H);
+
+        // Draw accumulated snow pile
+        if (pile.length > 0) {
+            ctx.fillStyle = 'rgba(200, 220, 255, 0.12)';
+            ctx.beginPath();
+            ctx.moveTo(0, H);
+            for (var i = 0; i < pile.length; i++) {
+                ctx.lineTo(pile[i].x, H - pile[i].h);
+            }
+            ctx.lineTo(W, H);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // Update and draw flakes
+        for (var i = flakes.length - 1; i >= 0; i--) {
+            var f = flakes[i];
+            f.y += f.speed;
+            f.x += f.drift;
+
+            // Check if flake reached bottom (or pile)
+            var pileH = 0;
+            for (var j = 0; j < pile.length; j++) {
+                if (Math.abs(pile[j].x - f.x) < 5) {
+                    pileH = pile[j].h;
+                    break;
+                }
+            }
+            if (f.y >= H - pileH - f.r) {
+                // Accumulate
+                var found = false;
+                for (var j = 0; j < pile.length; j++) {
+                    if (Math.abs(pile[j].x - f.x) < 8) {
+                        pile[j].h += f.r * 0.3;
+                        if (pile[j].h > 12) pile[j].h = 12; // max pile height
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    pile.push({x: f.x, h: f.r * 0.5});
+                }
+                // Trim pile if too many entries
+                if (pile.length > 200) pile.shift();
+                flakes.splice(i, 1);
+                flakes.push(createFlake());
+                continue;
+            }
+
+            // Wrap around horizontally
+            if (f.x < 0) f.x = W;
+            if (f.x > W) f.x = 0;
+
+            // Draw flake
+            ctx.beginPath();
+            ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(200, 220, 255, ' + f.opacity + ')';
+            ctx.fill();
+        }
+
+        requestAnimationFrame(update);
+    }
+    update();
 })();
 
 // Mouse tracking - cursor glow (transform for performance)

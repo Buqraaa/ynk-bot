@@ -1,5 +1,6 @@
 """
 Hosgeldin gorseli olusturucu (Pillow).
+Referans: temiz, modern, mor-mavi, avatar sol, metin sag, alt bar.
 """
 import io
 import os
@@ -28,7 +29,7 @@ def _font(size, bold=False):
     return ImageFont.load_default()
 
 
-def _yuvarlak_avatar(avatar_bytes, boyut=150):
+def _yuvarlak_avatar(avatar_bytes, boyut=160):
     img = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA")
     img = img.resize((boyut, boyut), Image.LANCZOS)
     maske = Image.new("L", (boyut, boyut), 0)
@@ -50,78 +51,71 @@ def hosgeldin_gorseli_olustur(
     yukseklik=450,
 ):
     """Hosgeldin gorseli olusturur ve PNG bytes dondurur."""
-    # Mor-mavi gradient arka plan (dikey)
+    # Mor-mavi gradient arka plan (dikey, koyu)
     img = Image.new("RGBA", (genislik, yukseklik), (0, 0, 0, 255))
     draw = ImageDraw.Draw(img)
 
     for y in range(yukseklik):
         oran = y / yukseklik
-        # koyu mor (#1a1033) -> koyu mavi (#0f1a3a)
-        r = int(26 + (15 - 26) * oran)
-        g = int(16 + (26 - 16) * oran)
-        b = int(51 + (58 - 51) * oran)
+        # koyu lacivert (#0a0e1a) -> koyu mor (#1a1030)
+        r = int(10 + 16 * oran)
+        g = int(14 + 6 * oran)
+        b = int(26 + 25 * oran)
         draw.line([(0, y), (genislik, y)], fill=(r, g, b, 255))
 
-    # Sol kenar vurgu (mor-mavi)
-    for y in range(yukseklik):
-        oran = y / yukseklik
-        r = int(88 + 26 * oran)
-        g = int(101 + 36 * oran)
-        b = int(242 - 20 * oran)
-        draw.line([(0, y), (4, y)], fill=(r, g, b, 255))
-
-    # Avatar (ust orta)
-    avatar_boyut = 130
+    # Avatar (sol orta)
+    avatar_boyut = 160
     avatar = _yuvarlak_avatar(avatar_bytes, avatar_boyut)
-    avatar_x = (genislik - avatar_boyut) // 2
-    avatar_y = 40
+    avatar_x = 40
+    avatar_y = 90
 
-    # Avatar cercevesi
+    # Avatar cercevesi (mor-mavi, ince)
     draw.ellipse(
         (
-            avatar_x - 4,
-            avatar_y - 4,
-            avatar_x + avatar_boyut + 4,
-            avatar_y + avatar_boyut + 4,
+            avatar_x - 5,
+            avatar_y - 5,
+            avatar_x + avatar_boyut + 5,
+            avatar_y + avatar_boyut + 5,
         ),
-        outline=(114, 137, 222, 255),
+        outline=(88, 101, 242, 255),
         width=3,
     )
 
     img.paste(avatar, (avatar_x, avatar_y), avatar)
 
-    # Metin (ortalanmis)
-    metin_x = genislik // 2
-    metin_y = avatar_y + avatar_boyut + 30
+    # Metin (sag taraf)
+    metin_x = avatar_x + avatar_boyut + 30
+    metin_y = 90
 
-    font_baslik = _font(40, bold=True)
-    font_isim = _font(28, bold=True)
-    font_alt = _font(16)
+    font_baslik = _font(34, bold=True)
+    font_isim = _font(26, bold=True)
+    font_alt = _font(15)
     font_sayi = _font(13)
 
-    # Baslik (ortalanmis)
-    bbox = draw.textbbox((0, 0), baslik, font=font_baslik)
-    text_w = bbox[2] - bbox[0]
-    draw.text((metin_x - text_w // 2, metin_y), baslik, font=font_baslik, fill=(255, 255, 255, 255))
-    metin_y += 50
+    # Baslik
+    draw.text((metin_x, metin_y), baslik, font=font_baslik, fill=(255, 255, 255, 255))
+    metin_y += 46
 
-    # Uye adi (mor-mavi, ortalanmis)
-    bbox = draw.textbbox((0, 0), uye_adi, font=font_isim)
-    text_w = bbox[2] - bbox[0]
-    draw.text((metin_x - text_w // 2, metin_y), uye_adi, font=font_isim, fill=(130, 150, 235, 255))
-    metin_y += 42
+    # Uye adi (mor-mavi vurgu)
+    draw.text((metin_x, metin_y), uye_adi, font=font_isim, fill=(114, 137, 222, 255))
+    metin_y += 38
 
-    # Mesaj (ortalanmis)
-    bbox = draw.textbbox((0, 0), mesaj, font=font_alt)
-    text_w = bbox[2] - bbox[0]
-    draw.text((metin_x - text_w // 2, metin_y), mesaj, font=font_alt, fill=(180, 185, 210, 255))
+    # Mesaj
+    draw.text((metin_x, metin_y), mesaj, font=font_alt, fill=(170, 175, 200, 255))
     metin_y += 30
 
-    # Sunucu adi ve uye sayisi (ortalanmis)
-    alt_text = f"{sunucu_adi}  •  Üye #{uye_sayisi}"
-    bbox = draw.textbbox((0, 0), alt_text, font=font_sayi)
-    text_w = bbox[2] - bbox[0]
-    draw.text((metin_x - text_w // 2, metin_y), alt_text, font=font_sayi, fill=(120, 125, 150, 255))
+    # Sunucu adi ve uye sayisi
+    draw.text((metin_x, metin_y), f"{sunucu_adi}  •  Üye #{uye_sayisi}", font=font_sayi, fill=(110, 115, 145, 255))
+
+    # Alt bar (mor-mavi gradient, sol kenardan baslayip ortaya kadar)
+    bar_y = yukseklik - 50
+    bar_genislik = int(genislik * 0.6)
+    for i in range(bar_genislik):
+        oran = i / bar_genislik
+        r = int(88 + 26 * oran)
+        g = int(101 + 36 * oran)
+        b = int(242 - 20 * oran)
+        draw.line([(20 + i, bar_y), (20 + i, bar_y + 4)], fill=(r, g, b, 255))
 
     buf = io.BytesIO()
     img.save(buf, format="PNG", optimize=True)

@@ -106,16 +106,28 @@ def _extract(query):
     import yt_dlp
 
     # 1. Arama: web client (search destekler)
-    opts_search = dict(YTDLP_OPTIONS)
-    cookies = _cookies_dosyasi()
-    if cookies:
-        opts_search["cookiefile"] = cookies
-    # format kisitlamasini kaldir (search'te format onemli degil)
-    opts_search.pop("format", None)
-    opts_search["extract_flat"] = "in_playlist"
-    opts_search["skip_download"] = True
-    with yt_dlp.YoutubeDL(opts_search) as ydl:
-        info = ydl.extract_info(query, download=False)
+    import time as _time
+    for _deneme in range(3):
+        try:
+            opts_search = dict(YTDLP_OPTIONS)
+            cookies = _cookies_dosyasi()
+            if cookies:
+                opts_search["cookiefile"] = cookies
+            opts_search.pop("format", None)
+            opts_search["extract_flat"] = "in_playlist"
+            opts_search["skip_download"] = True
+            opts_search["sleep_requests"] = 1
+            with yt_dlp.YoutubeDL(opts_search) as ydl:
+                info = ydl.extract_info(query, download=False)
+            break
+        except Exception as e:
+            err = str(e)
+            if "Sign in" in err or "bot" in err.lower():
+                if _deneme < 2:
+                    logger.warning("Muzik: arama deneme %d basarisiz, tekrar deneniyor...", _deneme + 1)
+                    _time.sleep(2)
+                    continue
+            raise
         if "entries" in info and info["entries"]:
             info = info["entries"][0]
         video_id = info.get("id") or info.get("url", "").split("v=")[-1].split("&")[0]
@@ -129,6 +141,10 @@ def _extract(query):
         video_url = f"https://www.youtube.com/watch?v={video_id}" if video_id else (info.get("webpage_url") or info.get("url"))
         title = info.get("title", "Bilinmeyen")
         duration = info.get("duration", 0) or 0
+
+        # Arama ve cekim arasinda kisa bekleme (rate limiting onleme)
+        import time as _t
+        _t.sleep(1)
 
     # 2. Ses URL'si cekme: sirayla farkli client'lar dene (bot engelini asar)
     clients = [

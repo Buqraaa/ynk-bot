@@ -1083,8 +1083,6 @@ document.addEventListener('click', function(e) {
 });
 
 window.addEventListener('load', function () {
-    // Query param ile tab belirlenmişse zaten server-side aktif, JS'ye gerek yok
-    // Ama hash varsa (eski linkler) de destekle
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
     if (tabParam) {
@@ -1092,6 +1090,10 @@ window.addEventListener('load', function () {
             b => (b.getAttribute('onclick') || '').includes("'" + tabParam + "'")
         );
         if (btn) switchTab(tabParam, btn);
+        // URL'den tab parametresini temizle (yenileyince Genel Bakış açılsın)
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
     }
     const hash = window.location.hash.replace('#', '');
     if (hash && !tabParam) {

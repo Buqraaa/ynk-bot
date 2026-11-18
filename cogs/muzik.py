@@ -84,9 +84,11 @@ def _cookies_dosyasi():
                 return None
             # Netscape header eksikse ekle (yt-dlp format kontrolu)
             text = icerik.decode("utf-8", errors="replace")
+            # Normalize line endings (Windows CRLF -> Unix LF)
+            text = text.replace("\\r\\n", "\\n").replace("\\r", "\\n")
             if "Netscape HTTP Cookie File" not in text:
                 text = "# Netscape HTTP Cookie File\\n# https://curl.haxx.se/rfc/cookie_spec.html\\n# This is a generated file! Do not edit.\\n" + text
-                icerik = text.encode("utf-8")
+            icerik = text.encode("utf-8")
             fd, yol = tempfile.mkstemp(suffix=".txt", prefix="yt_cookies_")
             with os.fdopen(fd, "wb") as f:
                 f.write(icerik)

@@ -51,6 +51,21 @@ YTDLP_OPTIONS = {
     "source_address": "0.0.0.0",
 }
 
+# Cookies dosyasi (Railway'de /app/data/cookies.txt olarak mount edilebilir)
+def _cookies_dosyasi():
+    from config import APP_DIR
+    for ad in ("cookies.txt", "youtube_cookies.txt"):
+        yol = APP_DIR / ad
+        if yol.exists():
+            return str(yol)
+    # Kod dizininde de ara
+    from config import BUNDLE_DIR
+    for ad in ("cookies.txt", "youtube_cookies.txt"):
+        yol = BUNDLE_DIR / ad
+        if yol.exists():
+            return str(yol)
+    return None
+
 
 
 
@@ -67,6 +82,9 @@ def _extract(query):
 
     # 1. Arama: web client (search destekler)
     opts_search = dict(YTDLP_OPTIONS)
+    cookies = _cookies_dosyasi()
+    if cookies:
+        opts_search["cookiefile"] = cookies
     with yt_dlp.YoutubeDL(opts_search) as ydl:
         info = ydl.extract_info(query, download=False)
         if "entries" in info and info["entries"]:
@@ -94,6 +112,9 @@ def _extract(query):
                 "extractor_args": {"youtube": {"player_client": [client_opts["player_client"][0]]}},
                 "http_headers": {"User-Agent": client_opts["User-Agent"]},
             }
+            cookies = _cookies_dosyasi()
+            if cookies:
+                opts["cookiefile"] = cookies
             with yt_dlp.YoutubeDL(opts) as ydl:
                 info2 = ydl.extract_info(video_url, download=False)
                 audio_url = info2.get("url")
@@ -111,6 +132,9 @@ def _extract(query):
 
     # Son care: varsayilan ile dene
     opts_web = dict(YTDLP_OPTIONS)
+    cookies = _cookies_dosyasi()
+    if cookies:
+        opts_web["cookiefile"] = cookies
     with yt_dlp.YoutubeDL(opts_web) as ydl:
         info3 = ydl.extract_info(video_url, download=False)
         return Track(

@@ -191,7 +191,9 @@ def _extract(query):
                         "source_address": "0.0.0.0",
                         "format": fmt_str,
                         "remote_components": ["ejs:github"],
-                        "extractor_args": {"youtube": {"player_client": [client_opts["player_client"][0]]}},
+                        "no_check_certificate": True,
+                        "geo_bypass": True,
+                        "extractor_args": {"youtube": {"player_client": [client_opts["player_client"][0]], "player_skip": ["webpage", "configs"]}},
                         "http_headers": {"User-Agent": client_opts["User-Agent"]},
                     }
                     if cookie_val:

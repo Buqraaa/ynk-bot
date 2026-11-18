@@ -46,7 +46,7 @@ body {
 }
 body.ready { visibility: visible; }
 
-/* animated background - winter snow */
+/* animated background - winter + cursor glow */
 .bg-anim {
     position: fixed;
     inset: 0;
@@ -81,11 +81,23 @@ body.ready { visibility: visible; }
     90% { opacity: 0.8; }
     100% { transform: translateY(105vh) translateX(15px); opacity: 0; }
 }
-/* subtle frost overlay */
+/* frost overlay */
 .bg-anim .frost {
     position: absolute;
     inset: 0;
     background: radial-gradient(ellipse at 50% 0%, rgba(100,140,220,0.06) 0%, transparent 60%);
+}
+/* cursor glow */
+.cursor-glow {
+    position: fixed;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(88,101,242,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+    transform: translate(-50%, -50%);
+    transition: left 0.1s ease, top 0.1s ease;
 }
 
 /* sidebar */
@@ -315,7 +327,11 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
     font-family: inherit;
 }
 .btn:hover { background: var(--accent-2); }
-.btn:active { transform: translateY(1px); }
+.btn:active { transform: translateY(1px) scale(0.97); }
+.btn-ghost:active { transform: scale(0.97); }
+.tile:active { transform: translateY(-1px) scale(0.98); }
+.menu-btn:active { transform: scale(0.98); }
+.tag:active { transform: scale(0.95); }
 
 .btn-ghost {
     background: var(--panel-2);
@@ -386,6 +402,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 <body>
 
 <div class="bg-anim"><div class="frost"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div></div>
+<div class="cursor-glow" id="cursorGlow"></div>
 
 <div class="sidebar">
     <div class="sidebar-head">
@@ -923,6 +940,38 @@ function filterPlugins() {
     zamanlayici = setInterval(kontrolEt, 2000);
     setTimeout(kontrolEt, 400);
 })();
+
+// Mouse tracking - cursor glow
+document.addEventListener('mousemove', function(e) {
+    const glow = document.getElementById('cursorGlow');
+    if (glow) {
+        glow.style.left = e.clientX + 'px';
+        glow.style.top = e.clientY + 'px';
+    }
+});
+
+// Click sound (tok)
+var audioCtx = null;
+function playClickSound() {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = 800;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 0.08);
+    } catch(e) {}
+}
+document.addEventListener('click', function(e) {
+    if (e.target.closest('button, a, .tile, .tag, .btn, .btn-ghost, .menu-btn')) {
+        playClickSound();
+    }
+});
 
 window.addEventListener('load', function () {
     const hash = window.location.hash.replace('#', '');

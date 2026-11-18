@@ -1,6 +1,9 @@
-discord.py
+﻿discord.py>=2.4
 fastapi
 uvicorn
 jinja2
 pywebview
 pyinstaller
+PyNaCl
+davey
+yt-dlp

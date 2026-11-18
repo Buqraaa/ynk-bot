@@ -40,7 +40,9 @@ YNK BOT/
 │   ├── tavsiye.py          # /tavsiye komutu
 │   ├── moderasyon.py       # /sil komutu
 │   ├── log.py              # Denetim günlüğü
-│   └── youtube.py          # YouTube video/Shorts bildirimi
+│   ├── youtube.py          # YouTube video/Shorts bildirimi
+│   ├── moderasyon.py       # /sil, /ban, /kick, /timeout, /uyari komutları
+│   └── tickets.py          # Ticket (destek) sistemi
 ├── web/
 │   ├── app.py              # FastAPI panel rotaları
 │   └── templates/
@@ -60,6 +62,12 @@ YNK BOT/
 |-------|----------|
 | `/sil [miktar]` | Bulunduğun kanaldan belirtilen sayıda mesajı siler. |
 | `/tavsiye [mesaj]` | Tavsiye kanalına öneri gönderir, ✅/❌ tepkileri ekler. |
+| `/ban [üye] [sebep]` | Üyeyi sunucudan yasaklar. |
+| `/kick [üye] [sebep]` | Üyeyi sunucudan atar. |
+| `/timeout [üye] [dakika] [sebep]` | Üyeyi belirtilen süre susturur. |
+| `/uyari [üye] [sebep]` | Üyeye uyarı verir (kayıtlı). |
+| `/uyarilar [üye]` | Üyenin uyarı geçmişini gösterir. |
+| `/uyari-temizle [üye]` | Üyenin uyarılarını sıfırlar. |
 
 ## Panel özellikleri
 
@@ -72,6 +80,7 @@ YNK BOT/
 - YouTube otomasyonu (`@handle`, link veya `UC...` kanal ID'si)
 - Canlı duyuru gönderme
 - Kod uzantısı dosyasını düzenleme
+- SQLite veritabanı (ynk.db) ile kalıcı ayarlar, uyarılar, ticket kayıtları
 
 ### Kanal ID'leri
 
@@ -99,12 +108,23 @@ ID bulunamazsa eski davranış olarak kanal adı kullanılır.
 
 | Olay | Açıklama |
 |------|----------|
-| Mesaj silindi | Silinen mesajın kanalı, yazarı ve içeriği |
-| Toplu mesaj silindi | Son 10 mesajın özeti ve toplam sayı |
-| Mesaj düzenlendi | Eski ve yeni içerik |
+| Mesaj silindi / toplu silindi / düzenlendi | Kanal, yazar, içerik |
+| Kanal pin güncellemesi | |
 | Ban / unban | Banlanan veya banı kaldırılan kullanıcı |
 | Kanal oluşturma / silme / güncelleme | Ad, konu, yavaş mod, NSFW, kategori |
 | Rol oluşturma / silme / güncelleme | Ad, renk, izinler, görünürlük |
+| Emoji / sticker güncelleme | |
+| Webhook güncelleme | |
+| Sunucu güncelleme | Ad, ikon, splash, vanity URL, sistem kanalı |
+| Davet oluşturma / silme | |
+| Entegrasyon ekleme / kaldırma | |
+| Thread oluşturma / silme / güncelleme | |
+| Ses kanalı katılım / ayrılma / değiştirme | |
+| Ses durumu güncelleme | Self-mute, self-deaf, server mute/deaf |
+| Stage başlatma / bitirme / konu güncelleme | |
+| Etkinlik oluşturma / silme / güncelleme | |
+| AutoMod kural oluşturma / silme / güncelleme / aksiyon | |
+| Üye katılım / ayrılma / güncelleme | Takma ad, rol ekleme/çıkarma, susturma |
 | Üye güncelleme | Takma ad, rol ekleme/çıkarma, susturma |
 
 ## EXE olarak çalıştırma (tek tık)
@@ -144,6 +164,21 @@ Her önemli adımdan sonra commit atılır. Bir şey bozulursa:
 git log --oneline
 git checkout -- dosya.py
 ```
+
+## Cloud / 7-24 Çalıştırma
+
+Oracle Cloud Free Tier ile botu 7/24 çalıştırabilirsiniz:
+
+1. Oracle Cloud hesabı oluştur (free tier, kredi kartı ister ama ücret alınmaz).
+2. Compute → Create Instance → Ubuntu 22.04/24.04, Always Free shape (VM.Standard.E2.1.Micro).
+3. SSH ile bağlan.
+4. `setup_oracle.sh` scriptini çalıştır.
+5. `.env` dosyasına token yaz, `settings.json` ve `ynk.db` dosyalarını `scp` ile yükle.
+6. `ynk-bot.service` dosyasını systemd'ye kur (script içindeki adımlar).
+7. Oracle Cloud Console → Networking → Security Lists → Ingress Rules → port 8000'i aç (0.0.0.0/0).
+8. Panel: `http://SUNUCU_IP:8000`
+
+Not: GUI (pywebview) sunucuda çalışmaz; panel tarayıcıdan açılır. Bot headless olarak `bot_headless.py` ile çalışır.
 
 ## Yedek
 

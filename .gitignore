@@ -1,5 +1,8 @@
 # Gizli bilgiler
 .env
+settings.json
+ynk.db
+warnings.json
 
 # Python
 __pycache__/

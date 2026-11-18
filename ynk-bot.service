@@ -1,0 +1,16 @@
+[Unit]
+Description=YNK Discord Bot
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/ynk-bot
+ExecStart=/usr/bin/python3 /home/ubuntu/ynk-bot/bot_headless.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/ubuntu/ynk-bot/bot.log
+StandardError=append:/home/ubuntu/ynk-bot/bot.log
+
+[Install]
+WantedBy=multi-user.target

@@ -5,6 +5,8 @@ import sys
 import threading
 from pathlib import Path
 
+import db
+
 # PyInstaller ile derlendiginde ayarlar exe'nin yaninda, sablonlar ise gecici
 # bundle klasorunde durur. Gelistirme sirasinda ikisi de proje klasorundedir.
 if getattr(sys, "frozen", False):
@@ -57,6 +59,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger("ynk")
 
+# DAVE hata ayiklamasi kapali; normal seviyeye dondu
+
 default_settings = {
     "hedef_uye": 1000,
     "guild_id": 0,
@@ -74,7 +78,6 @@ default_settings = {
     "youtube_channel_id": "",
     "youtube_mesaj": "@everyone Yeni video yayında arkadaşlar! Kaçırmayın 🔥\n{link}",
     "son_video_id": "",
-    "sil_max_limit": 100,
     "hosgeldin_kanal": "",
     "hosgeldin_kanal_id": 0,
     "hosgeldin_baslik": "👋 Hoş geldin!",
@@ -85,6 +88,18 @@ default_settings = {
     "veda_kanal": "",
     "veda_kanal_id": 0,
     "veda_mesaj": "{uye} aramızdan ayrıldı. Görüşürüz!",
+    "muzik_varsayilan_ses": 50,
+    "muzik_max_kuyruk": 50,
+    "ticket_kategori": "Tickets",
+    "ticket_panel_kanal": "",
+    "ticket_panel_kanal_id": 0,
+    "ticket_mesaj": "Destek talebi oluşturmak için aşağıdaki butona tıkla.",
+    "ticket_destek_rol_id": 0,
+    "ticket_log_kanal": "",
+    "ticket_log_kanal_id": 0,
+    "sil_max_limit": 100,
+    "mod_timeout_varsayilan": 10,
+    "mod_uyari_limit": 0,
 }
 
 _settings_lock = threading.RLock()
@@ -92,25 +107,42 @@ _settings_lock = threading.RLock()
 
 def ayarlari_yukle():
     with _settings_lock:
-        if CONFIG_FILE.exists():
-            try:
-                with open(CONFIG_FILE, "r", encoding="utf-8-sig") as f:
-                    data = json.load(f)
-                for anahtar, deger in default_settings.items():
-                    if anahtar not in data:
-                        data[anahtar] = deger
-                return data
-            except Exception:
-                logger.exception("Ayarlar okunamadi, varsayilanlar kullanilacak")
-        return default_settings.copy()
+        try:
+            data = db.ayar_yukle()
+        except Exception:
+            logger.exception("DB ayarlar okunamadi, varsayilanlar kullanilacak")
+            data = {}
+        if not data:
+            data = default_settings.copy()
+        else:
+            for anahtar, deger in default_settings.items():
+                if anahtar not in data:
+                    data[anahtar] = deger
+        # Geriye donuk uyumluluk: settings.json'a da yedek yaz.
+        try:
+            gecici = CONFIG_FILE.parent / (CONFIG_FILE.name + ".tmp")
+            with open(gecici, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+            os.replace(gecici, CONFIG_FILE)
+        except Exception:
+            pass
+        return data
 
 
 def ayarlari_kaydet(yeni_ayarlar):
     with _settings_lock:
-        gecici = CONFIG_FILE.parent / (CONFIG_FILE.name + ".tmp")
-        with open(gecici, "w", encoding="utf-8") as f:
-            json.dump(yeni_ayarlar, f, ensure_ascii=False, indent=4)
-        os.replace(gecici, CONFIG_FILE)
+        try:
+            db.ayar_kaydet(yeni_ayarlar)
+        except Exception:
+            logger.exception("DB ayarlar kaydedilemedi")
+        # Geriye donuk uyumluluk: JSON yedegi de tut.
+        try:
+            gecici = CONFIG_FILE.parent / (CONFIG_FILE.name + ".tmp")
+            with open(gecici, "w", encoding="utf-8") as f:
+                json.dump(yeni_ayarlar, f, ensure_ascii=False, indent=4)
+            os.replace(gecici, CONFIG_FILE)
+        except Exception:
+            logger.exception("Ayarlar JSON'a kaydedilemedi")
 
 
 BOT_AYARLARI = ayarlari_yukle()

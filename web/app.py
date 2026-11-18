@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from config import (
+    APP_DIR,
     BOT_AYARLARI,
     BUNDLE_DIR,
     EXTENSION_FILE,
@@ -126,6 +127,29 @@ def panel_ana_sayfa(request: Request):
             ),
         },
     )
+
+
+Gorsel_UZANTILAR = (".jpg", ".jpeg", ".png", ".webp", ".gif")
+
+
+def profil_resmini_bul():
+    try:
+        for dosya in sorted(APP_DIR.iterdir()):
+            if dosya.is_file() and dosya.suffix.lower() in Gorsel_UZANTILAR:
+                return dosya
+    except Exception:
+        logger.exception("Profil resmi aranamadi")
+    return None
+
+
+@app.get("/avatar")
+def avatar():
+    from fastapi.responses import FileResponse, Response
+
+    dosya = profil_resmini_bul()
+    if dosya is None:
+        return Response(status_code=404)
+    return FileResponse(str(dosya))
 
 
 @app.get("/api/durum")
@@ -259,6 +283,44 @@ def guncelle_log(log_kanal: str = Form(...)):
     return RedirectResponse(url="/", status_code=303)
 
 
+@app.post("/ticket-panel-gonder", response_class=RedirectResponse)
+def ticket_panel_gonder_route(
+    ticket_panel_kanal: str = Form(""),
+    ticket_kategori: str = Form("Tickets"),
+    ticket_mesaj: str = Form(""),
+    ticket_destek_rol_id: int = Form(0),
+    ticket_log_kanal: str = Form(""),
+):
+    _kanal_id_guncelle("ticket_panel_kanal", ticket_panel_kanal)
+    BOT_AYARLARI["ticket_panel_kanal"] = ticket_panel_kanal
+    BOT_AYARLARI["ticket_kategori"] = ticket_kategori.strip() or "Tickets"
+    BOT_AYARLARI["ticket_mesaj"] = ticket_mesaj.strip() or "Destek talebi oluşturmak için aşağıdaki butona tıkla."
+    BOT_AYARLARI["ticket_destek_rol_id"] = int(ticket_destek_rol_id or 0)
+    _kanal_id_guncelle("ticket_log_kanal", ticket_log_kanal)
+    BOT_AYARLARI["ticket_log_kanal"] = ticket_log_kanal
+    _ayarlari_kaydet()
+
+    bot = bot_manager.bot
+    loop = bot_manager.loop
+    if not (bot and loop and not bot.is_closed() and bot.guilds):
+        logger.warning("Ticket paneli gönderilemedi: bot çalışmıyor")
+        return RedirectResponse(url="/#ticket", status_code=303)
+
+    guild = ayarli_sunucu(bot)
+
+    async def gonder():
+        from cogs.tickets import ticket_panel_gonder
+        await ticket_panel_gonder(bot, guild)
+
+    try:
+        future = asyncio.run_coroutine_threadsafe(gonder(), loop)
+        future.result(15)
+    except Exception:
+        logger.exception("Ticket paneli gönderilemedi")
+
+    return RedirectResponse(url="/#ticket", status_code=303)
+
+
 @app.post("/guncelle-youtube", response_class=RedirectResponse)
 def guncelle_youtube(
     youtube_channel_id: str = Form(""),
@@ -278,11 +340,33 @@ def guncelle_youtube(
     return RedirectResponse(url="/", status_code=303)
 
 
+@app.post("/guncelle-muzik", response_class=RedirectResponse)
+def guncelle_muzik(
+    muzik_varsayilan_ses: int = Form(50),
+    muzik_max_kuyruk: int = Form(50),
+):
+    BOT_AYARLARI["muzik_varsayilan_ses"] = max(0, min(100, int(muzik_varsayilan_ses)))
+    BOT_AYARLARI["muzik_max_kuyruk"] = max(1, min(200, int(muzik_max_kuyruk)))
+    _ayarlari_kaydet()
+    return RedirectResponse(url="/#muzik", status_code=303)
+
+
 @app.post("/guncelle-komutlar", response_class=RedirectResponse)
 def guncelle_komutlar(sil_max_limit: int = Form(...)):
     BOT_AYARLARI["sil_max_limit"] = max(1, min(100, sil_max_limit))
     _ayarlari_kaydet()
     return RedirectResponse(url="/", status_code=303)
+
+
+@app.post("/guncelle-moderasyon", response_class=RedirectResponse)
+def guncelle_moderasyon(
+    mod_timeout_varsayilan: int = Form(10),
+    mod_uyari_limit: int = Form(0),
+):
+    BOT_AYARLARI["mod_timeout_varsayilan"] = max(1, min(40320, int(mod_timeout_varsayilan)))
+    BOT_AYARLARI["mod_uyari_limit"] = max(0, min(100, int(mod_uyari_limit)))
+    _ayarlari_kaydet()
+    return RedirectResponse(url="/#komutlar", status_code=303)
 
 
 @app.post("/duyuru-gonder", response_class=RedirectResponse)
@@ -325,5 +409,5 @@ def guncelle_kod(yeni_kod: str = Form(...)):
     return RedirectResponse(url="/bot-reset", status_code=303)
 
 
-def fastapi_baslat():
-    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="warning")
+def fastapi_baslat(host="127.0.0.1", port=8000):
+    uvicorn.run(app, host=host, port=port, log_level="warning")

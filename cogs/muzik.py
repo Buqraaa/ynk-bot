@@ -1,0 +1,316 @@
+import asyncio
+import os
+import shutil
+from collections import deque
+
+import discord
+from discord import app_commands
+from discord.ext import commands
+
+from config import BOT_AYARLARI, logger
+
+def _ffmpeg_yolu_bul():
+    yol = shutil.which("ffmpeg")
+    if yol:
+        return yol
+    # Yaygin kurulum konumlari (winget, choco, manuel)
+    adaylar = [
+        r"C:\ffmpeg\bin\ffmpeg.exe",
+        r"C:\Program Files\ffmpeg\bin\ffmpeg.exe",
+        r"C:\ProgramData\chocolatey\bin\ffmpeg.exe",
+    ]
+    # winget alias konumu
+    local = os.environ.get("LOCALAPPDATA", "")
+    if local:
+        adaylar.append(os.path.join(local, "Microsoft", "WinGet", "Links", "ffmpeg.exe"))
+        # winget paket klasorunde ara
+        pkg_root = os.path.join(local, "Microsoft", "WinGet", "Packages")
+        if os.path.isdir(pkg_root):
+            for root, dirs, files in os.walk(pkg_root):
+                if "ffmpeg.exe" in files:
+                    adaylar.append(os.path.join(root, "ffmpeg.exe"))
+    for aday in adaylar:
+        if os.path.isfile(aday):
+            return aday
+    return "ffmpeg"
+
+
+FFMPEG_PATH = _ffmpeg_yolu_bul()
+
+FFMPEG_OPTIONS = {
+    "before_options": '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -headers "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)"',
+    "options": "-vn",
+}
+
+YTDLP_OPTIONS = {
+    "format": "bestaudio/best",
+    "noplaylist": True,
+    "quiet": True,
+    "no_warnings": True,
+    "default_search": "ytsearch",
+    "source_address": "0.0.0.0",
+}
+
+
+class Track:
+    def __init__(self, title, url, webpage_url, duration):
+        self.title = title
+        self.url = url
+        self.webpage_url = webpage_url
+        self.duration = duration
+
+
+def _extract(query):
+    import yt_dlp
+
+    opts = dict(YTDLP_OPTIONS)
+    with yt_dlp.YoutubeDL(opts) as ydl:
+        info = ydl.extract_info(query, download=False)
+        if "entries" in info and info["entries"]:
+            info = info["entries"][0]
+        return Track(
+            title=info.get("title", "Bilinmeyen"),
+            url=info.get("url"),
+            webpage_url=info.get("webpage_url", query),
+            duration=info.get("duration", 0),
+        )
+
+
+class GuildPlayer:
+    def __init__(self):
+        self.queue = deque()
+        self.current = None
+        self.volume = 0.5
+        self.loop = False
+        self.voice_client = None
+
+
+_players = {}
+
+
+def get_player(guild_id):
+    if guild_id not in _players:
+        _players[guild_id] = GuildPlayer()
+    return _players[guild_id]
+
+
+class Muzik(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    def _ses_kanali(self, interaction):
+        if interaction.user.voice and interaction.user.voice.channel:
+            return interaction.user.voice.channel
+        return None
+
+    async def _baglan(self, interaction, kanal):
+        player = get_player(interaction.guild.id)
+        if player.voice_client and player.voice_client.is_connected():
+            if player.voice_client.channel != kanal:
+                await player.voice_client.move_to(kanal)
+        else:
+            player.voice_client = await kanal.connect()
+        # DAVE (E2EE) oturumunu hazir hale getir.
+        # discord.py 2.7.1, transition 0 icin execute_transition cagirmiyor;
+        # bu yuzden manuel olarak prepare+execute yapiyoruz.
+        for i in range(30):
+            try:
+                conn = player.voice_client._connection
+                if conn.can_encrypt:
+                    break
+                if i == 3 and conn.dave_session is not None and not conn.dave_session.ready:
+                    try:
+                        conn.dave_session.prepare_transition(0, 1)
+                        conn.dave_session.execute_transition(0)
+                    except Exception as e:
+                        logger.warning("Muzik: DAVE transition hatasi: %s", e)
+            except Exception:
+                pass
+            await asyncio.sleep(0.2)
+        try:
+            conn = player.voice_client._connection
+            logger.info("Muzik: DAVE can_encrypt=%s", conn.can_encrypt)
+        except Exception as e:
+            logger.exception("DAVE log hatasi: %s", e)
+        try:
+            conn = player.voice_client._connection
+            logger.info("Muzik: DAVE SONUC protocol_version=%s, can_encrypt=%s, mode=%s", conn.dave_protocol_version, conn.can_encrypt, player.voice_client.mode)
+        except Exception as e:
+            logger.exception("DAVE log hatasi: %s", e)
+        return player
+
+    async def _oynat(self, guild, player):
+        if player.loop and player.current is not None:
+            track = player.current
+        else:
+            if not player.queue:
+                player.current = None
+                logger.info("Muzik: kuyruk bos, oynatma bitti")
+                return
+            track = player.queue.popleft()
+
+        player.current = track
+        logger.info("Muzik: oynatiliyor -> %s", track.title)
+
+        def after(err):
+            try:
+                stderr_file.flush()
+                stderr_file.seek(0)
+                se = stderr_file.read()
+                if se.strip():
+                    logger.warning("FFmpeg stderr: %s", se.strip()[:500])
+            except Exception:
+                pass
+            if err:
+                logger.error("Muzik oynatma hatasi: %s", err)
+            else:
+                logger.info("Muzik: parça bitti")
+            try:
+                asyncio.run_coroutine_threadsafe(self._sonraki(guild, player), self.bot.loop)
+            except Exception:
+                logger.exception("Sonraki parcaya gecilemedi")
+
+        import subprocess
+        stderr_file = open(os.path.join(os.path.dirname(__file__), "..", "ffmpeg_stderr.log"), "w", encoding="utf-8", errors="replace")
+        try:
+            source = discord.FFmpegPCMAudio(track.url, executable=FFMPEG_PATH, stderr=stderr_file, **FFMPEG_OPTIONS)
+            source = discord.PCMVolumeTransformer(source, volume=player.volume)
+            player.voice_client.play(source, after=after)
+            import time
+            time.sleep(0.5)
+            logger.info("Muzik: play() cagirildi, is_playing=%s, is_connected=%s", player.voice_client.is_playing(), player.voice_client.is_connected())
+        except Exception as e:
+            logger.exception("FFmpeg baslatilamadi: %s", e)
+            await self._sonraki(guild, player)
+        finally:
+            # dosya handle'i acik birak; process bittiginde okunacak
+            pass
+
+    async def _sonraki(self, guild, player):
+        if player.loop and player.current is not None:
+            player.queue.appendleft(player.current)
+        await self._oynat(guild, player)
+
+    @app_commands.command(name="cal", description="Bir şarkı çalar (YouTube araması veya link)")
+    @app_commands.describe(sorgu="Şarkı adı veya YouTube linki")
+    async def cal(self, interaction: discord.Interaction, sorgu: str):
+        kanal = self._ses_kanali(interaction)
+        if kanal is None:
+            await interaction.response.send_message("❌ Önce bir ses kanalına katıl.", ephemeral=True)
+            return
+
+        await interaction.response.defer()
+        player = await self._baglan(interaction, kanal)
+
+        try:
+            track = await asyncio.get_event_loop().run_in_executor(None, _extract, sorgu)
+        except Exception as e:
+            logger.exception("Sarki bulunamadi")
+            await interaction.followup.send(f"❌ Şarkı bulunamadı: {e}", ephemeral=True)
+            return
+
+        player.queue.append(track)
+        if not (player.voice_client.is_playing() or player.voice_client.is_paused()):
+            await self._oynat(interaction.guild, player)
+            await interaction.followup.send(f"▶️ Çalınıyor: **{track.title}**")
+        else:
+            await interaction.followup.send(f"➕ Kuyruğa eklendi: **{track.title}**")
+
+    @app_commands.command(name="duraklat", description="Çalan şarkıyı duraklatır")
+    async def duraklat(self, interaction: discord.Interaction):
+        player = get_player(interaction.guild.id)
+        if player.voice_client and player.voice_client.is_playing():
+            player.voice_client.pause()
+            await interaction.response.send_message("⏸️ Duraklatıldı.")
+        else:
+            await interaction.response.send_message("❌ Çalan bir şey yok.", ephemeral=True)
+
+    @app_commands.command(name="devam", description="Duraklatılan şarkıyı devam ettirir")
+    async def devam(self, interaction: discord.Interaction):
+        player = get_player(interaction.guild.id)
+        if player.voice_client and player.voice_client.is_paused():
+            player.voice_client.resume()
+            await interaction.response.send_message("▶️ Devam ediyor.")
+        else:
+            await interaction.response.send_message("❌ Duraklatılmış bir şey yok.", ephemeral=True)
+
+    @app_commands.command(name="atla", description="Şarkıyı atlar")
+    async def atla(self, interaction: discord.Interaction):
+        player = get_player(interaction.guild.id)
+        if player.voice_client and (player.voice_client.is_playing() or player.voice_client.is_paused()):
+            player.voice_client.stop()
+            await interaction.response.send_message("⏭️ Atlandı.")
+        else:
+            await interaction.response.send_message("❌ Çalan bir şey yok.", ephemeral=True)
+
+    @app_commands.command(name="durdur", description="Müziği durdurur ve kuyruğu temizler")
+    async def durdur(self, interaction: discord.Interaction):
+        player = get_player(interaction.guild.id)
+        player.queue.clear()
+        player.current = None
+        player.loop = False
+        if player.voice_client:
+            player.voice_client.stop()
+        await interaction.response.send_message("⏹️ Durduruldu, kuyruk temizlendi.")
+
+    @app_commands.command(name="kuyruk", description="Müzik kuyruğunu gösterir")
+    async def kuyruk(self, interaction: discord.Interaction):
+        player = get_player(interaction.guild.id)
+        if not player.current and not player.queue:
+            await interaction.response.send_message("Kuyruk boş.", ephemeral=True)
+            return
+        satirlar = []
+        if player.current:
+            satirlar.append(f"▶️ **{player.current.title}** (şu an)")
+        for i, t in enumerate(player.queue, 1):
+            satirlar.append(f"{i}. {t.title}")
+        await interaction.response.send_message("\n".join(satirlar))
+
+    @app_commands.command(name="ses", description="Ses seviyesini ayarlar (0-100)")
+    @app_commands.describe(seviye="Ses seviyesi (0-100)")
+    async def ses(self, interaction: discord.Interaction, seviye: int):
+        player = get_player(interaction.guild.id)
+        seviye = max(0, min(100, seviye))
+        player.volume = seviye / 100
+        if player.voice_client and player.voice_client.source:
+            player.voice_client.source.volume = player.volume
+        await interaction.response.send_message(f"🔊 Ses: {seviye}%")
+
+    @app_commands.command(name="döngü", description="Döngü modunu açar/kapatır")
+    async def dongu(self, interaction: discord.Interaction):
+        player = get_player(interaction.guild.id)
+        player.loop = not player.loop
+        await interaction.response.send_message(f"🔁 Döngü: {'açık' if player.loop else 'kapalı'}")
+
+    @app_commands.command(name="cik", description="Ses kanalından ayrılır")
+    async def cik(self, interaction: discord.Interaction):
+        player = get_player(interaction.guild.id)
+        if player.voice_client:
+            player.queue.clear()
+            player.current = None
+            await player.voice_client.disconnect()
+            player.voice_client = None
+            await interaction.response.send_message("👋 Ayrıldım.")
+        else:
+            await interaction.response.send_message("❌ Ses kanalında değilim.", ephemeral=True)
+
+
+    @app_commands.command(name="testses", description="Test: yerel ses dosyasini calar")
+    async def testses(self, interaction: discord.Interaction):
+        kanal = self._ses_kanali(interaction)
+        if kanal is None:
+            await interaction.response.send_message("ses kanalina gir", ephemeral=True)
+            return
+        await interaction.response.defer()
+        player = await self._baglan(interaction, kanal)
+        try:
+            source = discord.FFmpegPCMAudio(os.path.join(os.path.dirname(__file__), "..", "test_tone.wav"), executable=FFMPEG_PATH)
+            player.voice_client.play(source)
+            await interaction.followup.send("test ses caliniyor")
+        except Exception as e:
+            logger.exception("testses hatasi")
+            await interaction.followup.send(f"hata: {e}", ephemeral=True)
+
+
+async def setup(bot):
+    await bot.add_cog(Muzik(bot))

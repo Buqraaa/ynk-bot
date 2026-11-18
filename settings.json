@@ -25,5 +25,16 @@
     "veda_kanal": "",
     "veda_kanal_id": 0,
     "veda_mesaj": "{uye} aramızdan ayrıldı. Görüşürüz!",
-    "hosgeldin_botlari_dahil": true
+    "hosgeldin_botlari_dahil": true,
+    "ticket_kategori": "Tickets",
+    "ticket_panel_kanal": "🎫・ticket",
+    "ticket_panel_kanal_id": 1572370257044181124,
+    "ticket_mesaj": "Destek talebi oluşturmak için aşağıdaki butona tıkla.",
+    "ticket_destek_rol_id": 1572003713902452738,
+    "ticket_log_kanal": "",
+    "ticket_log_kanal_id": 0,
+    "mod_timeout_varsayilan": 10,
+    "mod_uyari_limit": 0,
+    "muzik_varsayilan_ses": 50,
+    "muzik_max_kuyruk": 50
 }

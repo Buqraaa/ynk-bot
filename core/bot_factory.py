@@ -13,6 +13,8 @@ EXTENSIONS = (
     "cogs.moderasyon",
     "cogs.log",
     "cogs.youtube",
+    "cogs.tickets",
+    "cogs.muzik",
 )
 
 # Kanal adi -> kanal ID migrasyonu bu anahtarlar icin yapilir.
@@ -23,6 +25,8 @@ KANAL_ANAHTARLARI = (
     "tavsiye_kanal",
     "log_kanal",
     "youtube_kanal",
+    "ticket_panel_kanal",
+    "ticket_log_kanal",
 )
 
 
@@ -33,6 +37,7 @@ class YNKBot(commands.Bot):
         intents.moderation = True
         intents.guilds = True
         intents.message_content = True
+        intents.voice_states = True
 
         super().__init__(command_prefix="!", intents=intents)
         self.manager = manager

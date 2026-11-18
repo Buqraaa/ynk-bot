@@ -1,470 +1,930 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YNK Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #0b0d14;
+    --bg-2: #11131c;
+    --panel: #161822;
+    --panel-2: #1c1f2e;
+    --border: #232636;
+    --border-2: #2e3147;
+    --text: #f1f2f6;
+    --text-2: #a0a3b1;
+    --text-3: #6b6e7e;
+    --accent: #5865F2;
+    --accent-2: #4752C4;
+    --accent-soft: rgba(88,101,242,0.12);
+    --accent-glow: rgba(88,101,242,0.25);
+    --success: #3ba55c;
+    --danger: #ed4245;
+    --warning: #faa61a;
+    --info: #00aff4;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --sidebar: 220px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
 
-    <!DOCTYPE html>
-    <html lang="tr">
-    <head>
-        <meta charset="UTF-8">
-        <title>YNK Studio - MEE6 Dashboard</title>
-        <style>
-            * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-            body { background-color: #0b0f19; color: #f3f4f6; display: flex; height: 100vh; overflow: hidden; }
-            
-            /* MEE6 Sidebar */
-            .sidebar { width: 260px; background: #11131c; border-right: 1px solid #1e2130; display: flex; flex-direction: column; justify-content: space-between; padding: 18px; z-index: 2; }
-            .server-header { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid #1e2130; }
-            .server-avatar { width: 42px; height: 42px; background: linear-gradient(135deg, #5865F2, #7c3aed); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: white; box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3); }
-            .server-info h3 { font-size: 14px; font-weight: 600; color: #fff; }
-            .server-info p { font-size: 11px; color: {{ durum_renk }}; margin-top: 2px; font-weight: 500; display: flex; align-items: center; gap: 5px; }
-            .server-info p::before { content: ''; display: inline-block; width: 7px; height: 7px; background: {{ durum_renk }}; border-radius: 50%; box-shadow: 0 0 6px {{ durum_renk }}; }
-            
-            .search-box { margin: 16px 0; }
-            .search-box input { width: 100%; padding: 9px 12px; background: #090a0f; border: 1px solid #2a2e43; border-radius: 8px; color: #94a3b8; font-size: 12px; outline: none; }
-            
-            .menu-category { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin: 14px 8px 6px 8px; }
-            .menu { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; flex: 1; padding-right: 2px; }
-            .menu-btn { background: transparent; border: none; color: #94a3b8; padding: 10px 12px; text-align: left; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
-            .menu-btn:hover { background: rgba(124, 58, 237, 0.1); color: #fff; }
-            .menu-btn.active { background: #5865F2; color: #fff; font-weight: 600; box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3); }
-            
-            /* Main Dashboard & Subtle Animated Ambient Background */
-            .main-content { 
-                flex: 1; 
-                background-color: #0d1220;
-                background-image: 
-                    radial-gradient(circle at 15% 20%, rgba(88, 101, 242, 0.09) 0%, transparent 45%),
-                    radial-gradient(circle at 85% 75%, rgba(124, 58, 237, 0.08) 0%, transparent 45%),
-                    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-                background-size: 140% 140%, 140% 140%, 36px 36px, 36px 36px;
-                animation: ambientFloat 16s ease-in-out infinite alternate;
-                padding: 32px 40px; 
-                overflow-y: auto; 
-                position: relative;
-            }
-            @keyframes ambientFloat {
-                0% { background-position: 0% 0%, 100% 100%, 0 0, 0 0; }
-                50% { background-position: 50% 30%, 50% 70%, 0 0, 0 0; }
-                100% { background-position: 100% 15%, 10% 85%, 0 0, 0 0; }
-            }
+/* animated background - floating particles */
+.bg-anim {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+.bg-anim .particle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(88,101,242,0.35);
+    animation: floatUp linear infinite;
+}
+.bg-anim .particle:nth-child(1) { width: 3px; height: 3px; left: 10%; animation-duration: 18s; animation-delay: 0s; }
+.bg-anim .particle:nth-child(2) { width: 2px; height: 2px; left: 25%; animation-duration: 22s; animation-delay: -3s; }
+.bg-anim .particle:nth-child(3) { width: 4px; height: 4px; left: 40%; animation-duration: 26s; animation-delay: -7s; opacity: 0.6; }
+.bg-anim .particle:nth-child(4) { width: 2px; height: 2px; left: 55%; animation-duration: 20s; animation-delay: -12s; }
+.bg-anim .particle:nth-child(5) { width: 3px; height: 3px; left: 70%; animation-duration: 24s; animation-delay: -5s; }
+.bg-anim .particle:nth-child(6) { width: 2px; height: 2px; left: 85%; animation-duration: 19s; animation-delay: -9s; }
+.bg-anim .particle:nth-child(7) { width: 3px; height: 3px; left: 15%; animation-duration: 28s; animation-delay: -15s; opacity: 0.5; }
+.bg-anim .particle:nth-child(8) { width: 2px; height: 2px; left: 60%; animation-duration: 21s; animation-delay: -2s; }
+@keyframes floatUp {
+    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.6; }
+    100% { transform: translateY(-10vh) translateX(20px); opacity: 0; }
+}
+/* subtle grid lines */
+.bg-anim .grid {
+    position: absolute;
+    inset: 0;
+    background-image: 
+        linear-gradient(rgba(88,101,242,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(88,101,242,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridShift 30s linear infinite;
+}
+@keyframes gridShift {
+    0% { transform: translate(0,0); }
+    100% { transform: translate(60px, 60px); }
+}
 
-            .tab-pane { display: none; animation: fadeIn 0.3s ease; }
-            .tab-pane.active { display: block; }
-            @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-            
-            .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-            h1 { font-size: 22px; font-weight: 700; color: #fff; }
-            .subtitle { color: #94a3b8; font-size: 13px; margin-bottom: 24px; }
-            
-            /* MEE6 Style Cards & Grids */
-            .card { background: rgba(22, 27, 46, 0.92); backdrop-filter: blur(8px); border: 1px solid #1f263d; border-radius: 14px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
-            .card h3 { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-            
-            .features-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
-            .feature-card { background: rgba(22, 27, 46, 0.92); border: 1px solid #1f263d; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; justify-content: space-between; }
-            .feature-card:hover { border-color: #5865F2; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(88,101,242,0.15); }
-            .feature-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-            .feature-icon { width: 36px; height: 36px; background: rgba(88,101,242,0.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-            .badge { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
-            .feature-title { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 4px; }
-            .feature-desc { font-size: 12px; color: #94a3b8; line-height: 1.4; }
-            
-            label { display: block; font-size: 12px; font-weight: 500; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-            input[type="number"], input[type="text"], select { width: 100%; padding: 11px 14px; background: #0b0f19; border: 1px solid #2a2e43; border-radius: 8px; color: white; font-size: 13px; margin-bottom: 18px; outline: none; transition: border-color 0.2s; }
-            input:focus, select:focus, textarea:focus { border-color: #5865F2; box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.15); }
-            
-            textarea { width: 100%; height: 110px; padding: 12px 14px; background: #0b0f19; border: 1px solid #2a2e43; border-radius: 8px; color: #e2e8f0; font-size: 13px; outline: none; resize: vertical; line-height: 1.5; margin-bottom: 16px; }
-            textarea.code-editor { height: 300px; color: #38bdf8; font-family: 'Courier New', Courier, monospace; }
-            
-            .save-btn { background: #5865F2; color: white; border: none; padding: 11px 22px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 12px rgba(88,101,242,0.3); }
-            .save-btn:hover { background: #4752C4; }
-            
-            .control-btn-green { background: #10b981; color: white; padding: 11px 20px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: 600; font-size: 13px; box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
-            .control-btn-green:hover { background: #059669; }
-            .control-btn-red { background: #ef4444; color: white; padding: 11px 20px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: 600; font-size: 13px; box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
-            .control-btn-red:hover { background: #dc2626; }
-            .control-btn-blue { background: #3b82f6; color: white; padding: 11px 20px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: 600; font-size: 13px; box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
-            .control-btn-blue:hover { background: #2563eb; }
-            
-            .tag-pill { background: #1f263d; color: #cbd5e1; border: 1px solid #2e3856; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
-            .tag-pill:hover { background: #5865F2; color: #fff; border-color: #5865F2; }
-            
-            .flex-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-            .refresh-btn { background: #2a2e43; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; margin-bottom: 16px; transition: background 0.2s; }
-            .refresh-btn:hover { background: #3b4259; }
-            .hint-box { background: rgba(88, 101, 242, 0.08); border-left: 3px solid #5865F2; padding: 10px 14px; border-radius: 6px; font-size: 12px; color: #cbd5e1; margin-bottom: 18px; line-height: 1.5; }
-        </style>
-    </head>
-    <body>
-        <div class="sidebar">
-            <div>
-                <div class="server-header">
-                    <div class="server-avatar">YN</div>
-                    <div class="server-info">
-                        <h3>YNK Studio</h3>
-                        <p>{{ bot_durumu }}</p>
-                    </div>
-                </div>
-                
-                <div class="search-box">
-                    <input type="text" id="pluginSearch" onkeyup="filterPlugins()" placeholder="Modül veya komut ara...">
-                </div>
-                
-                <div class="menu">
-                    <div class="menu-category">Dashboard</div>
-                    <button class="menu-btn active" onclick="switchTab('home', this)">🏠 Genel Bakış</button>
-                    <button class="menu-btn" onclick="switchTab('komutlar', this)">⌨️ Komutlar</button>
-                    
-                    <div class="menu-category">Plugins & Modules</div>
-                    <button class="menu-btn" onclick="switchTab('sayac', this)">📊 Sayaç Sistemi</button>
-                    <button class="menu-btn" onclick="switchTab('karsilama', this)">👋 Karşılama & Veda</button>
-                    <button class="menu-btn" onclick="switchTab('tavsiye', this)">💡 Tavsiye Sistemi</button>
-                    <button class="menu-btn" onclick="switchTab('log', this)">🛡️ Mod Log Sistemi</button>
-                    <button class="menu-btn" onclick="switchTab('youtube', this)">📺 YouTube Bildirim</button>
-                    <button class="menu-btn" onclick="switchTab('duyuru', this)">📢 Canlı Duyuru Gönder</button>
-                    
-                    <div class="menu-category">Advanced</div>
-                    <button class="menu-btn" onclick="switchTab('kod', this)">💻 Kod Uzantısı (Extension)</button>
-                </div>
+/* sidebar */
+.sidebar {
+    width: var(--sidebar);
+    background: var(--bg-2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+    position: relative;
+}
+.sidebar-head {
+    padding: 16px 14px;
+    border-bottom: 1px solid var(--border);
+}
+.sidebar-head .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.sidebar-head .brand-mark {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; color: #fff; font-size: 12px;
+    box-shadow: 0 2px 8px var(--accent-glow);
+}
+.sidebar-head .brand-name { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+.sidebar-head .status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--text-2);
+}
+.sidebar-head .status .dot { width: 7px; height: 7px; border-radius: 50%; background: {{ durum_renk }}; box-shadow: 0 0 8px {{ durum_renk }}; }
+
+.search-box { padding: 10px 10px 6px; }
+.search-box input {
+    width: 100%;
+    padding: 7px 11px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 12.5px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.search-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.search-box input::placeholder { color: var(--text-3); }
+
+.menu { flex: 1; overflow-y: auto; padding: 6px 0; }
+.menu-group {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 12px 14px 4px;
+}
+.menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 14px;
+    background: transparent;
+    border: none;
+    border-left: 3px solid transparent;
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    font-family: inherit;
+}
+.menu-btn:hover { background: var(--panel); color: var(--text); }
+.menu-btn.active { background: var(--accent-soft); color: var(--text); border-left-color: var(--accent); font-weight: 600; }
+.menu-btn .ico { font-size: 14px; width: 18px; text-align: center; }
+
+.sidebar-foot {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+    font-size: 10.5px;
+    color: var(--text-3);
+}
+
+/* main */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+    position: relative;
+    overflow: hidden;
+}
+.topbar {
+    height: 52px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    flex-shrink: 0;
+}
+.topbar .title { font-size: 13px; font-weight: 500; color: var(--text-2); }
+.topbar .title b { color: var(--text); font-weight: 600; }
+.topbar .actions { display: flex; gap: 8px; align-items: center; }
+.topbar .pill {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+}
+
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+}
+
+.tab { display: none; animation: fadeIn 0.2s ease; }
+.tab.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.page-head { margin-bottom: 20px; }
+.page-head h1 { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.4px; }
+.page-head p { color: var(--text-2); font-size: 13.5px; margin-top: 4px; }
+
+/* hero card */
+.hero {
+    background: linear-gradient(135deg, #5865F2 0%, #4752C4 50%, #3c45a5 100%);
+    border-radius: var(--radius-lg);
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(88,101,242,0.25);
+}
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+}
+.hero h2 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 6px; position: relative; }
+.hero p { color: rgba(255,255,255,0.85); font-size: 13.5px; position: relative; }
+
+.card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+    margin-bottom: 16px;
+    transition: border-color 0.15s;
+}
+.card:hover { border-color: var(--border-2); }
+.card h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.card p { color: var(--text-2); font-size: 13px; }
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 14px 0 18px;
+}
+.tile {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+}
+.tile:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(88,101,242,0.15); }
+.tile-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.tile-icon { width: 32px; height: 32px; background: var(--accent-soft); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--accent); }
+.tile-badge { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: rgba(59,185,80,0.12); color: var(--success); border: 1px solid rgba(59,185,80,0.25); }
+.tile-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.tile-desc { font-size: 11.5px; color: var(--text-2); line-height: 1.4; }
+
+label { display: block; font-size: 11.5px; font-weight: 600; color: var(--text-2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+input[type="number"], input[type="text"], select, textarea {
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 13px;
+    margin-bottom: 14px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    font-family: inherit;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+textarea { resize: vertical; line-height: 1.5; min-height: 80px; }
+textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 12px; }
+
+.btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 9px 18px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    font-family: inherit;
+}
+.btn:hover { background: var(--accent-2); }
+.btn:active { transform: translateY(1px); }
+
+.btn-ghost {
+    background: var(--panel-2);
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    padding: 7px 13px;
+    border-radius: var(--radius);
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    font-family: inherit;
+}
+.btn-ghost:hover { background: var(--border); color: var(--text); border-color: var(--border-2); }
+
+.btn-green, .btn-red, .btn-blue {
+    color: #fff;
+    padding: 9px 16px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 600;
+    font-size: 13px;
+    transition: filter 0.15s;
+}
+.btn-green { background: var(--success); }
+.btn-red { background: var(--danger); }
+.btn-blue { background: var(--info); }
+.btn-green:hover, .btn-red:hover, .btn-blue:hover { filter: brightness(1.08); }
+
+.tag {
+    background: var(--panel-2);
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.12s;
+}
+.tag:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.hint {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 12.5px;
+    color: var(--text-2);
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+.group { font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.8px; margin: 16px 0 8px; }
+
+/* guide */
+.guide-section { margin-bottom: 22px; }
+.guide-section h2 { font-size: 15px; font-weight: 600; color: var(--accent); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.guide-section h3 { font-size: 13px; font-weight: 600; color: var(--text); margin: 10px 0 4px; }
+.guide-section p, .guide-section li { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+.guide-section ul { padding-left: 18px; margin: 4px 0 8px; }
+.guide-section code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 12px; color: var(--accent); font-family: 'JetBrains Mono', Consolas, monospace; }
+.guide-section .cmd { color: var(--accent); font-weight: 600; }
+
+.chk { display: flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--text); margin-bottom: 14px; }
+.chk input { width: auto; margin: 0; }
+</style>
+</head>
+<body>
+
+<div class="bg-anim"><div class="grid"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div></div>
+
+<div class="sidebar">
+    <div class="sidebar-head">
+        <div class="brand">
+            <div class="brand-mark" style="overflow:hidden; padding:0;">
+                <img src="/avatar" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" onerror="this.style.display='none'; this.parentElement.textContent='YN';">
             </div>
-            
-            <div style="font-size: 11px; color: #64748b; text-align: center; padding-top: 10px; border-top: 1px solid #1e2130;">MEE6 Dashboard v20.0</div>
+            <div class="brand-name">YNK Studio</div>
         </div>
-
-        <div class="main-content">
-            <!-- GENEL BAKIŞ -->
-            <div id="home" class="tab-pane active">
-                <div class="top-bar">
-                    <div>
-                        <h1>Dashboard & Plugins</h1>
-                        <p class="subtitle" style="margin-bottom: 0;">Sunucu modüllerini yönet, Hot Reset at ve bot gücünü kontrol et.</p>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <h3>⚡ Bot Güç & Hot Reset Merkezi</h3>
-                    <p style="color: #94a3b8; margin-bottom: 20px; font-size: 13px;">Botu yeniden başlatmadan güncellemeleri anında uygulamak için <b>Hot Reset</b> kullanabilirsin.</p>
-                    <div class="flex-row">
-                        <a href="/bot-ac" class="control-btn-green">🤖 Botu Başlat</a>
-                        <a href="/bot-reset" class="control-btn-blue">🔄 Hot Reset (Yeniden Başlat)</a>
-                        <a href="/bot-kapat" class="control-btn-red">🛑 Botu Kapat</a>
-                    </div>
-                </div>
-
-                <div class="menu-category" style="margin-left: 0; margin-bottom: 12px;">Aktif Modüller & Komutlar</div>
-                <div class="features-grid">
-                    <div class="feature-card" onclick="switchTab('komutlar', document.querySelectorAll('.menu-btn')[1])">
-                        <div>
-                            <div class="feature-card-top"><div class="feature-icon">⌨️</div><span class="badge">Aktif</span></div>
-                            <div class="feature-title">Slash Komutlar (/sil, /tavsiye)</div>
-                            <div class="feature-desc">Toplu mesaj temizleme (/sil) ve tavsiye komutlarının ayarlarını yönet.</div>
-                        </div>
-                    </div>
-                    <div class="feature-card" onclick="switchTab('youtube', document.querySelectorAll('.menu-btn')[6])">
-                        <div>
-                            <div class="feature-card-top"><div class="feature-icon">📺</div><span class="badge">Otomasyon</span></div>
-                            <div class="feature-title">YouTube Video & Shorts</div>
-                            <div class="feature-desc">Kanal linki (@ardinus) ile otomatik video ve Shorts algılama ve duyuru.</div>
-                        </div>
-                    </div>
-                    <div class="feature-card" onclick="switchTab('duyuru', document.querySelectorAll('.menu-btn')[7])">
-                        <div>
-                            <div class="feature-card-top"><div class="feature-icon">📢</div><span class="badge">Canlı</span></div>
-                            <div class="feature-title">Canlı Duyuru Gönder</div>
-                            <div class="feature-desc">Discord'a girmeden istediğin kanala @everyone etiketli duyuru at.</div>
-                        </div>
-                    </div>
-                    <div class="feature-card" onclick="switchTab('sayac', document.querySelectorAll('.menu-btn')[2])">
-                        <div>
-                            <div class="feature-card-top"><div class="feature-icon">📊</div><span class="badge">Aktif</span></div>
-                            <div class="feature-title">Sayaç Sistemi</div>
-                            <div class="feature-desc">Üye katılımlarını, çıkışlarını ve hedef sayaç oda takibini yönet.</div>
-                        </div>
-                    </div>
-                    <div class="feature-card" onclick="switchTab('karsilama', document.querySelectorAll('.menu-btn')[3])">
-                        <div>
-                            <div class="feature-card-top"><div class="feature-icon">👋</div><span class="badge">Yeni</span></div>
-                            <div class="feature-title">Karşılama & Veda</div>
-                            <div class="feature-desc">Yeni üyeleri karşıla, otomatik rol ver ve ayrılanları uğurla.</div>
-                        </div>
-                    </div>
-                    <div class="feature-card" onclick="switchTab('tavsiye', document.querySelectorAll('.menu-btn')[4])">
-                        <div>
-                            <div class="feature-card-top"><div class="feature-icon">💡</div><span class="badge">Aktif</span></div>
-                            <div class="feature-title">Tavsiye Sistemi</div>
-                            <div class="feature-desc">Kullanıcıların öneri bırakabileceği özel kanal ve reaksiyon yönetimi.</div>
-                        </div>
-                    </div>
-                    <div class="feature-card" onclick="switchTab('log', document.querySelectorAll('.menu-btn')[5])">
-                        <div>
-                            <div class="feature-card-top"><div class="feature-icon">🛡️</div><span class="badge">Aktif</span></div>
-                            <div class="feature-title">Mod Log Sistemi</div>
-                            <div class="feature-desc">Mesaj silinmeleri, banlar, kanal ve rol hareketlerinin denetim günlüğü.</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- KOMUTLAR SEKMESİ -->
-            <div id="komutlar" class="tab-pane">
-                <h1>⌨️ Bot Komutları Yönetimi</h1>
-                <p class="subtitle">Sunucudaki tüm slash komutlarını görüntüle ve üzerine tıklayarak ayarlarını yapılandır.</p>
-                
-                <div class="features-grid" style="margin-bottom: 24px;">
-                    <div class="feature-card" onclick="document.getElementById('sil-ayar-karti').scrollIntoView({behavior: 'smooth'});">
-                        <div>
-                            <div class="feature-card-top"><div class="feature-icon">🧹</div><span class="badge">/sil [miktar]</span></div>
-                            <div class="feature-title">/sil Komutu</div>
-                            <div class="feature-desc">Bulunulan sohbet odasındaki belirtilen sayı kadar (Örn: /sil 100) mesajı tek seferde temizler. Ayarlamak için tıkla.</div>
-                        </div>
-                    </div>
-                    <div class="feature-card" onclick="switchTab('tavsiye', document.querySelectorAll('.menu-btn')[4])">
-                        <div>
-                            <div class="feature-card-top"><div class="feature-icon">💡</div><span class="badge">/tavsiye [mesaj]</span></div>
-                            <div class="feature-title">/tavsiye Komutu</div>
-                            <div class="feature-desc">Sadece belirlenen odada üyelerin öneri göndermesini ve oylama emojileri eklenmesini sağlar. Ayarlara gitmek için tıkla.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card" id="sil-ayar-karti">
-                    <h3>🧹 /sil Komutu Ayarları</h3>
-                    <p style="color: #94a3b8; font-size: 13px; margin-bottom: 16px;">Discord'da <b>/sil 100</b> yazdığında bot tek seferde en fazla kaç mesaj silebilsin? (Discord API sınırı gereği en fazla 100 önerilir).</p>
-                    <form action="/guncelle-komutlar" method="post">
-                        <label>Maksimum Tek Seferde Silinebilecek Mesaj Sayısı:</label>
-                        <input type="number" name="sil_max_limit" min="1" max="100" value="{{ ayarlar.sil_max_limit }}">
-                        <button type="submit" class="save-btn">Komut Ayarını Kaydet</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- SAYAÇ SİSTEMİ -->
-            <div id="sayac" class="tab-pane">
-                <h1>📊 Sayaç Sistemi Yönetimi</h1>
-                <p class="subtitle">Üye hedeflerini ve duyuru kanalını yapılandır.</p>
-                <div class="card">
-                    <button class="refresh-btn" onclick="window.location.reload();">🔄 Kanalları Yenile</button>
-                    <form action="/guncelle-sayac" method="post">
-                        <label>Hedef Üye:</label>
-                        <input type="number" name="hedef" value="{{ ayarlar.hedef_uye }}">
-                        <label>Sayaç Kanalı (Anlık Sunucu Odaları):</label>
-                        <select name="kanal">{% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.sayac_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}</select>
-                        <label>Giriş Mesajı:</label>
-                        <input type="text" name="giris" value="{{ ayarlar.giris_mesaji }}">
-                        <label>Çıkış Mesajı:</label>
-                        <input type="text" name="cikis" value="{{ ayarlar.cikis_mesaji }}">
-                        <button type="submit" class="save-btn">Ayarları Kaydet</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- KARŞILAMA VE VEDA SİSTEMİ -->
-            <div id="karsilama" class="tab-pane">
-                <h1>👋 Karşılama &amp; Veda Sistemi</h1>
-                <p class="subtitle">Yeni üyeleri karşıla, otomatik rol ver ve ayrılanları uğurla. Kanal seçmezsen özellik kapalı kalır.</p>
-                <div class="card">
-                    <button class="refresh-btn" onclick="window.location.reload();">🔄 Kanalları ve Rolleri Yenile</button>
-                    <form action="/karsilama-test" method="post" style="margin-bottom: 16px;">
-                        <button type="submit" class="refresh-btn">🧪 Test Mesajı Gönder</button>
-                        <p style="color: #94a3b8; font-size: 12px; margin: 6px 0 0;">Bot çalışırken seçili kanala örnek bir karşılama mesajı gönderir.</p>
-                    </form>
-                    <form action="/guncelle-karsilama" method="post">
-                        <label>Karşılama Kanalı:</label>
-                        <select name="hosgeldin_kanal">
-                            <option value="" {% if not ayarlar.hosgeldin_kanal %}selected{% endif %}>Kapalı</option>
-                            {% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.hosgeldin_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}
-                        </select>
-                        <label>Karşılama Başlığı:</label>
-                        <input type="text" name="hosgeldin_baslik" value="{{ ayarlar.hosgeldin_baslik }}">
-                        <label>Karşılama Mesajı:</label>
-                        <input type="text" name="hosgeldin_mesaj" value="{{ ayarlar.hosgeldin_mesaj }}">
-                        <p style="color: #94a3b8; font-size: 12px; margin-top: -6px;">Kullanılabilir: <b>{uye}</b>, <b>{isim}</b>, <b>{sunucu}</b>, <b>{uye_sayisi}</b></p>
-                        <label>Embed Rengi (örn: #5865F2):</label>
-                        <input type="text" name="hosgeldin_renk" value="{{ ayarlar.hosgeldin_renk }}">
-                        <label>Otomatik Rol:</label>
-                        <select name="hosgeldin_rol_id">
-                            <option value="0" {% if not ayarlar.hosgeldin_rol_id %}selected{% endif %}>Rol verme</option>
-                            {% for r in roller %}<option value="{{ r.id }}" {% if r.id == ayarlar.hosgeldin_rol_id %}selected{% endif %}>@{{ r.name }}</option>{% endfor %}
-                        </select>
-                        {% if not roller %}<p style="color: #f59e0b; font-size: 12px; margin-top: -6px;">Rol listesi için botun çalışıyor olması gerekir.</p>{% endif %}
-                        <label style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-                            <input type="checkbox" name="hosgeldin_botlari_dahil" value="1" style="width: auto; margin: 0;" {% if ayarlar.hosgeldin_botlari_dahil %}checked{% endif %}>
-                            Bot hesaplarını da karşıla
-                        </label>
-                        <label>Veda Kanalı:</label>
-                        <select name="veda_kanal">
-                            <option value="" {% if not ayarlar.veda_kanal %}selected{% endif %}>Kapalı</option>
-                            {% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.veda_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}
-                        </select>
-                        <label>Veda Mesajı:</label>
-                        <input type="text" name="veda_mesaj" value="{{ ayarlar.veda_mesaj }}">
-                        <p style="color: #94a3b8; font-size: 12px; margin-top: -6px;">Kullanılabilir: <b>{uye}</b>, <b>{isim}</b>, <b>{sunucu}</b>, <b>{uye_sayisi}</b></p>
-                        <button type="submit" class="save-btn">Ayarları Kaydet</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- TAVSİYE SİSTEMİ -->
-            <div id="tavsiye" class="tab-pane">
-                <h1>💡 Tavsiye Sistemi Ayarları</h1>
-                <p class="subtitle">Kullanıcıların tavsiye bırakabileceği özel kanal.</p>
-                <div class="card">
-                    <button class="refresh-btn" onclick="window.location.reload();">🔄 Kanalları Yenile</button>
-                    <form action="/guncelle-tavsiye" method="post">
-                        <label>Tavsiye Kanalı (Anlık Sunucu Odaları):</label>
-                        <select name="kanal">{% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.tavsiye_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}</select>
-                        <label>Başlık Etiketi:</label>
-                        <input type="text" name="baslik" value="{{ ayarlar.tavsiye_baslik }}">
-                        <button type="submit" class="save-btn">Ayarları Kaydet</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- MOD LOG SİSTEMİ -->
-            <div id="log" class="tab-pane">
-                <h1>🛡️ Mod Log (Denetim Günlüğü) Ayarları</h1>
-                <p class="subtitle">Sunucu içi güvenlik ve moderasyon olaylarının raporlandığı kanal.</p>
-                <div class="card">
-                    <button class="refresh-btn" onclick="window.location.reload();">🔄 Kanalları Yenile</button>
-                    <form action="/guncelle-log" method="post">
-                        <label>Log Bildirim Kanalı (Anlık Sunucu Odaları):</label>
-                        <select name="log_kanal">{% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.log_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}</select>
-                        <button type="submit" class="save-btn">Ayarları Kaydet</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- YOUTUBE OTOMASYON SİSTEMİ -->
-            <div id="youtube" class="tab-pane">
-                <h1>📺 YouTube Otomatik Video & Shorts Bildirimi</h1>
-                <p class="subtitle">Kanal linkini (Örn: https://www.youtube.com/@ardinus) veya ID'sini yapıştır; yeni içerikleri otomatik duyursun.</p>
-                <div class="card">
-                    <button class="refresh-btn" onclick="window.location.reload();">🔄 Kanalları Yenile</button>
-                    <div class="hint-box">
-                        <b>💡 Esnek Giriş Desteği:</b><br>
-                        Buraya doğrudan <b>https://www.youtube.com/@ardinus</b> linkini, <b>@ardinus</b> yazısını veya <b>UC...</b> ile başlayan kanal ID'sini yapıştırabilirsin. Sistem hepsini otomatik tanır.<br>
-                        Mesaj şablonunda <b>{link}</b> veya <b>{baslik}</b> etiketlerini kullanabilirsin.
-                    </div>
-                    <form action="/guncelle-youtube" method="post">
-                        <label>YouTube Kanal Linki, @handle veya ID:</label>
-                        <input type="text" name="youtube_channel_id" placeholder="https://www.youtube.com/@ardinus veya @ardinus" value="{{ ayarlar.youtube_channel_id }}">
-                        
-                        <label>Bildirimin Gideceği Discord Odası:</label>
-                        <select name="youtube_kanal">{% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.youtube_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}</select>
-                        
-                        <label>Otomatik Paylaşım Mesajı:</label>
-                        <div class="flex-row" style="margin-bottom: 8px;">
-                            <button type="button" class="tag-pill" onclick="ekleMetin('yt_mesaj', '@everyone ')">+ @everyone</button>
-                            <button type="button" class="tag-pill" onclick="ekleMetin('yt_mesaj', '{link}')">+ {link}</button>
-                            <button type="button" class="tag-pill" onclick="ekleMetin('yt_mesaj', '{baslik}')">+ {baslik}</button>
-                        </div>
-                        <textarea id="yt_mesaj" name="youtube_mesaj">{{ ayarlar.youtube_mesaj }}</textarea>
-                        
-                        <button type="submit" class="save-btn">💾 YouTube Otomasyonunu Kaydet</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- CANLI DUYURU GÖNDERME SEKMESİ -->
-            <div id="duyuru" class="tab-pane">
-                <h1>📢 Canlı Sunucu Duyurusu Gönder</h1>
-                <p class="subtitle">Discord'a girmeden doğrudan bu panelden istediğin kanala etiketli duyuru gönder.</p>
-                <div class="card">
-                    <button class="refresh-btn" onclick="window.location.reload();">🔄 Kanalları Yenile</button>
-                    <form action="/duyuru-gonder" method="post">
-                        <label>Duyurunun Atılacağı Sohbet Odası:</label>
-                        <select name="hedef_kanal">{% for k in kanallar %}<option value="{{ k }}">#{{ k }}</option>{% endfor %}</select>
-                        
-                        <label>Hızlı Etiket Ekle:</label>
-                        <div class="flex-row" style="margin-bottom: 8px;">
-                            <button type="button" class="tag-pill" onclick="ekleMetin('duyuru_metni', '@everyone ')">+ @everyone</button>
-                            <button type="button" class="tag-pill" onclick="ekleMetin('duyuru_metni', '@here ')">+ @here</button>
-                        </div>
-                        
-                        <label>Duyuru Mesajın:</label>
-                        <textarea id="duyuru_metni" name="duyuru_mesaji" placeholder="Buraya sunucuya göndermek istediğin duyuruyu yaz..." required></textarea>
-                        
-                        <button type="submit" class="save-btn">🚀 Duyuruyu Şimdi Sunucuya Gönder</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- KOD UZANTISI -->
-            <div id="kod" class="tab-pane">
-                <h1>💻 Harici Python Kod Editörü (Extension)</h1>
-                <p class="subtitle">Buraya yazdığın kodlar bot her başladığında otomatik çalışır. Hata olursa bot durmaz; durum aşağıda ve bot.log dosyasında görünür.</p>
-                <p style="color: {{ uzanti_renk }}; font-weight: 600; margin-bottom: 12px;">Durum: {{ uzanti_durumu }}</p>
-                <div class="card">
-                    <form action="/guncelle-kod" method="post">
-                        <textarea class="code-editor" name="yeni_kod">{{ kod_icerigi }}</textarea><br><br>
-                        <button type="submit" class="save-btn">💾 Kodu Kaydet ve Botu Yeniden Başlat</button>
-                    </form>
-                </div>
-            </div>
+        <div class="status">
+            <span class="dot"></span>
+            <span>{{ bot_durumu }}</span>
         </div>
+    </div>
 
-        <script>
-            function switchTab(tabId, btn) {
-                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-                document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
-                document.getElementById(tabId).classList.add('active');
-                if(btn) btn.classList.add('active');
+    <div class="search-box">
+        <input type="text" id="pluginSearch" onkeyup="filterPlugins()" placeholder="Modül veya komut ara...">
+    </div>
+
+    <div class="menu">
+        <div class="menu-group">Genel</div>
+        <button class="menu-btn active" onclick="switchTab('home', this)">🏠 Genel Bakış</button>
+        <button class="menu-btn" onclick="switchTab('komutlar', this)">⌨️ Komutlar</button>
+        <button class="menu-btn" onclick="switchTab('kilavuz', this)">📖 Kılavuz</button>
+
+        <div class="menu-group">Modüller</div>
+        <button class="menu-btn" onclick="switchTab('sayac', this)">📊 Sayaç</button>
+        <button class="menu-btn" onclick="switchTab('karsilama', this)">👋 Karşılama</button>
+        <button class="menu-btn" onclick="switchTab('tavsiye', this)">💡 Tavsiye</button>
+        <button class="menu-btn" onclick="switchTab('log', this)">🛡️ Mod Log</button>
+        <button class="menu-btn" onclick="switchTab('youtube', this)">📺 YouTube</button>
+        <button class="menu-btn" onclick="switchTab('duyuru', this)">📢 Duyuru</button>
+        <button class="menu-btn" onclick="switchTab('ticket', this)">🎫 Ticket</button>
+        <button class="menu-btn" onclick="switchTab('muzik', this)">🎵 Müzik</button>
+
+        <div class="menu-group">Gelişmiş</div>
+        <button class="menu-btn" onclick="switchTab('kod', this)">💻 Kod Uzantısı</button>
+    </div>
+
+    <div class="sidebar-foot">YNK Studio v3.2</div>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div class="title">Panel / <b id="currentTab">Genel Bakış</b></div>
+        <div class="actions">
+            <span class="pill">v3.2</span>
+        </div>
+    </div>
+
+    <div class="content">
+
+<!-- GENEL BAKIŞ -->
+<div id="home" class="tab active">
+    <div class="hero">
+        <h2>👋 Hoş geldin, YNK Studio</h2>
+        <p>Sunucu modüllerini yönet, botu kontrol et, özellikleri yapılandır.</p>
+    </div>
+
+    <div class="card">
+        <h3>Bot Kontrol Merkezi</h3>
+        <p style="margin-bottom:14px;">Botu başlat, kapat veya Hot Reset ile değişiklikleri anında uygula.</p>
+        <div class="row">
+            <a href="/bot-ac" class="btn-green">▶ Başlat</a>
+            <a href="/bot-reset" class="btn-blue">↻ Hot Reset</a>
+            <a href="/bot-kapat" class="btn-red">■ Kapat</a>
+        </div>
+    </div>
+
+    <div class="group">Modüller</div>
+    <div class="grid">
+        <div class="tile" onclick="switchTab('komutlar', document.querySelectorAll('.menu-btn')[1])">
+            <div class="tile-top"><div class="tile-icon">⌨</div><span class="tile-badge">Aktif</span></div>
+            <div class="tile-title">Slash Komutlar</div>
+            <div class="tile-desc">Moderasyon ve müzik komutları.</div>
+        </div>
+        <div class="tile" onclick="switchTab('youtube', document.querySelectorAll('.menu-btn')[6])">
+            <div class="tile-top"><div class="tile-icon">▶</div><span class="tile-badge">Otomasyon</span></div>
+            <div class="tile-title">YouTube</div>
+            <div class="tile-desc">Otomatik video ve Shorts duyurusu.</div>
+        </div>
+        <div class="tile" onclick="switchTab('duyuru', document.querySelectorAll('.menu-btn')[7])">
+            <div class="tile-top"><div class="tile-icon">📢</div><span class="tile-badge">Canlı</span></div>
+            <div class="tile-title">Duyuru</div>
+            <div class="tile-desc">Panelden kanala etiketli duyuru at.</div>
+        </div>
+        <div class="tile" onclick="switchTab('ticket', document.querySelectorAll('.menu-btn')[8])">
+            <div class="tile-top"><div class="tile-icon">🎫</div><span class="tile-badge">Yeni</span></div>
+            <div class="tile-title">Ticket</div>
+            <div class="tile-desc">Butonla destek talebi aç/kapat.</div>
+        </div>
+        <div class="tile" onclick="switchTab('muzik', document.querySelectorAll('.menu-btn')[9])">
+            <div class="tile-top"><div class="tile-icon">♪</div><span class="tile-badge">Yeni</span></div>
+            <div class="tile-title">Müzik</div>
+            <div class="tile-desc">Ses kanalında müzik çal.</div>
+        </div>
+        <div class="tile" onclick="switchTab('sayac', document.querySelectorAll('.menu-btn')[3])">
+            <div class="tile-top"><div class="tile-icon">📊</div><span class="tile-badge">Aktif</span></div>
+            <div class="tile-title">Sayaç</div>
+            <div class="tile-desc">Üye hedefleri ve mesajlar.</div>
+        </div>
+        <div class="tile" onclick="switchTab('karsilama', document.querySelectorAll('.menu-btn')[4])">
+            <div class="tile-top"><div class="tile-icon">👋</div><span class="tile-badge">Yeni</span></div>
+            <div class="tile-title">Karşılama</div>
+            <div class="tile-desc">Karşılama, veda, otomatik rol.</div>
+        </div>
+        <div class="tile" onclick="switchTab('tavsiye', document.querySelectorAll('.menu-btn')[5])">
+            <div class="tile-top"><div class="tile-icon">💡</div><span class="tile-badge">Aktif</span></div>
+            <div class="tile-title">Tavsiye</div>
+            <div class="tile-desc">Öneri kanalı ve oylama.</div>
+        </div>
+        <div class="tile" onclick="switchTab('log', document.querySelectorAll('.menu-btn')[6])">
+            <div class="tile-top"><div class="tile-icon">🛡</div><span class="tile-badge">Aktif</span></div>
+            <div class="tile-title">Mod Log</div>
+            <div class="tile-desc">Denetim günlüğü.</div>
+        </div>
+    </div>
+</div>
+
+<!-- KOMUTLAR -->
+<div id="komutlar" class="tab">
+    <div class="page-head">
+        <h1>Komut Yönetimi</h1>
+        <p>Tüm slash komutları ve ayarları.</p>
+    </div>
+
+    <div class="group">Moderasyon</div>
+    <div class="grid">
+        <div class="tile" onclick="document.getElementById('sil-ayar-karti').scrollIntoView({behavior:'smooth'});">
+            <div class="tile-top"><div class="tile-icon">🧹</div><span class="tile-badge">/sil</span></div>
+            <div class="tile-title">/sil [miktar]</div>
+            <div class="tile-desc">Belirtilen sayıda mesajı siler.</div>
+        </div>
+        <div class="tile" onclick="document.getElementById('mod-ayar-karti').scrollIntoView({behavior:'smooth'});">
+            <div class="tile-top"><div class="tile-icon">🔨</div><span class="tile-badge">/ban</span></div>
+            <div class="tile-title">/ban [üye] [sebep]</div>
+            <div class="tile-desc">Üyeyi yasaklar.</div>
+        </div>
+        <div class="tile" onclick="document.getElementById('mod-ayar-karti').scrollIntoView({behavior:'smooth'});">
+            <div class="tile-top"><div class="tile-icon">👢</div><span class="tile-badge">/kick</span></div>
+            <div class="tile-title">/kick [üye] [sebep]</div>
+            <div class="tile-desc">Üyeyi atar.</div>
+        </div>
+        <div class="tile" onclick="document.getElementById('mod-ayar-karti').scrollIntoView({behavior:'smooth'});">
+            <div class="tile-top"><div class="tile-icon">🔇</div><span class="tile-badge">/timeout</span></div>
+            <div class="tile-title">/timeout [üye] [dk]</div>
+            <div class="tile-desc">Üyeyi susturur.</div>
+        </div>
+        <div class="tile" onclick="document.getElementById('mod-ayar-karti').scrollIntoView({behavior:'smooth'});">
+            <div class="tile-top"><div class="tile-icon">⚠</div><span class="tile-badge">/uyari</span></div>
+            <div class="tile-title">/uyari [üye] [sebep]</div>
+            <div class="tile-desc">/uyari, /uyarilar, /uyari-temizle.</div>
+        </div>
+        <div class="tile" onclick="switchTab('tavsiye', document.querySelectorAll('.menu-btn')[5])">
+            <div class="tile-top"><div class="tile-icon">💡</div><span class="tile-badge">/tavsiye</span></div>
+            <div class="tile-title">/tavsiye [mesaj]</div>
+            <div class="tile-desc">Öneri ve oylama.</div>
+        </div>
+    </div>
+
+    <div class="group">Müzik</div>
+    <div class="grid">
+        <div class="tile"><div class="tile-top"><div class="tile-icon">♪</div><span class="tile-badge">/cal</span></div><div class="tile-title">/cal [sorgu]</div><div class="tile-desc">Şarkı çalar veya kuyruğa ekler.</div></div>
+        <div class="tile"><div class="tile-top"><div class="tile-icon">⏸</div><span class="tile-badge">/duraklat</span></div><div class="tile-title">/duraklat</div><div class="tile-desc">Duraklatır.</div></div>
+        <div class="tile"><div class="tile-top"><div class="tile-icon">▶</div><span class="tile-badge">/devam</span></div><div class="tile-title">/devam</div><div class="tile-desc">Devam ettirir.</div></div>
+        <div class="tile"><div class="tile-top"><div class="tile-icon">⏭</div><span class="tile-badge">/atla</span></div><div class="tile-title">/atla</div><div class="tile-desc">Atlar.</div></div>
+        <div class="tile"><div class="tile-top"><div class="tile-icon">⏹</div><span class="tile-badge">/durdur</span></div><div class="tile-title">/durdur</div><div class="tile-desc">Durdurur, kuyruğu temizler.</div></div>
+        <div class="tile"><div class="tile-top"><div class="tile-icon">📋</div><span class="tile-badge">/kuyruk</span></div><div class="tile-title">/kuyruk</div><div class="tile-desc">Kuyruğu gösterir.</div></div>
+        <div class="tile"><div class="tile-top"><div class="tile-icon">🔊</div><span class="tile-badge">/ses</span></div><div class="tile-title">/ses [0-100]</div><div class="tile-desc">Ses seviyesi.</div></div>
+        <div class="tile"><div class="tile-top"><div class="tile-icon">🔁</div><span class="tile-badge">/döngü</span></div><div class="tile-title">/döngü</div><div class="tile-desc">Döngü modu.</div></div>
+        <div class="tile"><div class="tile-top"><div class="tile-icon">👋</div><span class="tile-badge">/cik</span></div><div class="tile-title">/cik</div><div class="tile-desc">Ses kanalından ayrılır.</div></div>
+    </div>
+
+    <div class="card" id="sil-ayar-karti">
+        <h3>/sil Ayarları</h3>
+        <p style="margin-bottom:12px;">Bir seferde en fazla kaç mesaj silinebilsin?</p>
+        <form action="/guncelle-komutlar" method="post">
+            <label>Maksimum Mesaj Sayısı</label>
+            <input type="number" name="sil_max_limit" min="1" max="100" value="{{ ayarlar.sil_max_limit }}">
+            <button type="submit" class="btn">Kaydet</button>
+        </form>
+    </div>
+
+    <div class="card" id="mod-ayar-karti">
+        <h3>Moderasyon Varsayılanları</h3>
+        <p style="margin-bottom:12px;">Moderasyon komutlarının varsayılan değerleri.</p>
+        <form action="/guncelle-moderasyon" method="post">
+            <label>Varsayılan Susturma (dakika)</label>
+            <input type="number" name="mod_timeout_varsayilan" min="1" max="40320" value="{{ ayarlar.mod_timeout_varsayilan }}">
+            <label>Uyarı Eşiği (0 = kapalı)</label>
+            <input type="number" name="mod_uyari_limit" min="0" max="100" value="{{ ayarlar.mod_uyari_limit }}">
+            <button type="submit" class="btn">Kaydet</button>
+        </form>
+    </div>
+</div>
+
+<!-- KILAVUZ -->
+<div id="kilavuz" class="tab">
+    <div class="page-head">
+        <h1>Kılavuz</h1>
+        <p>Tüm özellikler, kullanım yolları ve ayar açıklamaları.</p>
+    </div>
+    <div class="card">
+        <div class="guide-section">
+            <h2>Genel</h2>
+            <h3>Bot Kontrol</h3>
+            <p><b>Başlat:</b> Botu Discord'a bağlar. <b>Hot Reset:</b> Değişiklikleri uygular. <b>Kapat:</b> Botu durdurur.</p>
+            <h3>Kod Uzantısı</h3>
+            <p><code>user_extension.py</code> dosyasına yazılan kod bot her başladığında çalışır. <code>async def setup(bot)</code> tanımlanırsa çağrılır.</p>
+        </div>
+        <div class="guide-section">
+            <h2>Slash Komutları</h2>
+            <h3>Moderasyon</h3>
+            <ul>
+                <li><span class="cmd">/sil [miktar]</span> — Kanaldan mesaj siler.</li>
+                <li><span class="cmd">/ban [üye] [sebep]</span> — Üyeyi yasaklar.</li>
+                <li><span class="cmd">/kick [üye] [sebep]</span> — Üyeyi atar.</li>
+                <li><span class="cmd">/timeout [üye] [dakika]</span> — Üyeyi susturur.</li>
+                <li><span class="cmd">/uyari [üye] [sebep]</span> — Uyarı verir.</li>
+                <li><span class="cmd">/uyarilar [üye]</span> — Uyarı geçmişini gösterir.</li>
+                <li><span class="cmd">/uyari-temizle [üye]</span> — Uyarıları sıfırlar.</li>
+            </ul>
+            <h3>Tavsiye</h3>
+            <p><span class="cmd">/tavsiye [mesaj]</span> — Öneri kanalına gönderir, 👍/👎 ekler.</p>
+            <h3>Müzik</h3>
+            <ul>
+                <li><span class="cmd">/cal [sorgu]</span> — Şarkı çalar veya kuyruğa ekler.</li>
+                <li><span class="cmd">/duraklat /devam /atla /durdur</span></li>
+                <li><span class="cmd">/kuyruk /ses [0-100] /döngü /cik</span></li>
+            </ul>
+        </div>
+        <div class="guide-section">
+            <h2>Modüller</h2>
+            <h3>Sayaç</h3><p>Hedef üye ve sayaç kanalı.</p>
+            <h3>Karşılama & Veda</h3><p>Karşılama embed'i, otomatik rol, veda mesajı.</p>
+            <h3>Mod Log</h3><p>Mesaj silme, ban/kick, kanal/rol olayları.</p>
+            <h3>YouTube</h3><p>Kanal linki → yeni video/Shorts duyurusu.</p>
+            <h3>Duyuru</h3><p>Panelden kanala etiketli duyuru.</p>
+            <h3>Ticket</h3><p>Butonla destek kanalı aç/kapat.</p>
+            <h3>Müzik</h3><p>Ses kanalında müzik çal. Varsayılan ses ve maks kuyruk ayarlanabilir.</p>
+        </div>
+        <div class="guide-section">
+            <h2>SQLite</h2>
+            <p>Ayarlar, uyarılar, ticket kayıtları <code>ynk.db</code>'de saklanır. Yedeklemek için <code>ynk.db</code> dosyasını kopyalayın.</p>
+        </div>
+        <div class="guide-section">
+            <h2>İpuçları</h2>
+            <ul>
+                <li>Kanal adı yerine kanal ID'si de saklanır.</li>
+                <li><code>guild_id</code> botun hangi sunucuya ait olduğunu belirtir.</li>
+                <li>Hata durumunda <code>bot.log</code> dosyasına bakın.</li>
+                <li>Küçük değişiklikler: panel → Kod Uzantısı. Büyük: kaynak dosyalar + <code>GELISTIR.bat</code>.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- SAYAÇ -->
+<div id="sayac" class="tab">
+    <div class="page-head">
+        <h1>Sayaç Sistemi</h1>
+        <p>Üye hedeflerini ve duyuru kanalını yapılandır.</p>
+    </div>
+    <div class="card">
+        <button class="btn-ghost" onclick="window.location.reload();">↻ Kanalları Yenile</button>
+        <form action="/guncelle-sayac" method="post" style="margin-top:12px;">
+            <label>Hedef Üye</label>
+            <input type="number" name="hedef" value="{{ ayarlar.hedef_uye }}">
+            <label>Sayaç Kanalı</label>
+            <select name="kanal">{% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.sayac_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}</select>
+            <label>Giriş Mesajı</label>
+            <input type="text" name="giris" value="{{ ayarlar.giris_mesaji }}">
+            <label>Çıkış Mesajı</label>
+            <input type="text" name="cikis" value="{{ ayarlar.cikis_mesaji }}">
+            <button type="submit" class="btn">Kaydet</button>
+        </form>
+    </div>
+</div>
+
+<!-- KARŞILAMA -->
+<div id="karsilama" class="tab">
+    <div class="page-head">
+        <h1>Karşılama & Veda</h1>
+        <p>Yeni üyeleri karşıla, otomatik rol ver ve ayrılanları uğurla.</p>
+    </div>
+    <div class="card">
+        <button class="btn-ghost" onclick="window.location.reload();">↻ Kanalları ve Rolleri Yenile</button>
+        <form action="/karsilama-test" method="post" style="margin:12px 0;">
+            <button type="submit" class="btn-ghost">✉ Test Mesajı Gönder</button>
+            <p style="color:var(--text-2); font-size:12px; margin:6px 0 0;">Bot çalışırken seçili kanala örnek bir karşılama mesajı gönderir.</p>
+        </form>
+        <form action="/guncelle-karsilama" method="post">
+            <label>Karşılama Kanalı</label>
+            <select name="hosgeldin_kanal">
+                <option value="" {% if not ayarlar.hosgeldin_kanal %}selected{% endif %}>Kapalı</option>
+                {% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.hosgeldin_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}
+            </select>
+            <label>Karşılama Başlığı</label>
+            <input type="text" name="hosgeldin_baslik" value="{{ ayarlar.hosgeldin_baslik }}">
+            <label>Karşılama Mesajı</label>
+            <input type="text" name="hosgeldin_mesaj" value="{{ ayarlar.hosgeldin_mesaj }}">
+            <p style="color:var(--text-3); font-size:12px; margin-top:-6px;">Kullanılabilir: {uye}, {isim}, {sunucu}, {uye_sayisi}</p>
+            <label>Embed Rengi</label>
+            <input type="text" name="hosgeldin_renk" value="{{ ayarlar.hosgeldin_renk }}">
+            <label>Otomatik Rol</label>
+            <select name="hosgeldin_rol_id">
+                <option value="0" {% if not ayarlar.hosgeldin_rol_id %}selected{% endif %}>Rol verme</option>
+                {% for r in roller %}<option value="{{ r.id }}" {% if r.id == ayarlar.hosgeldin_rol_id %}selected{% endif %}>@{{ r.name }}</option>{% endfor %}
+            </select>
+            {% if not roller %}<p style="color:var(--warning); font-size:12px; margin-top:-6px;">Rol listesi için botun çalışıyor olması gerekir.</p>{% endif %}
+            <label class="chk"><input type="checkbox" name="hosgeldin_botlari_dahil" value="1" {% if ayarlar.hosgeldin_botlari_dahil %}checked{% endif %}> Bot hesaplarını da karşıla</label>
+            <label>Veda Kanalı</label>
+            <select name="veda_kanal">
+                <option value="" {% if not ayarlar.veda_kanal %}selected{% endif %}>Kapalı</option>
+                {% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.veda_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}
+            </select>
+            <label>Veda Mesajı</label>
+            <input type="text" name="veda_mesaj" value="{{ ayarlar.veda_mesaj }}">
+            <p style="color:var(--text-3); font-size:12px; margin-top:-6px;">Kullanılabilir: {uye}, {isim}, {sunucu}, {uye_sayisi}</p>
+            <button type="submit" class="btn">Kaydet</button>
+        </form>
+    </div>
+</div>
+
+<!-- TAVSİYE -->
+<div id="tavsiye" class="tab">
+    <div class="page-head">
+        <h1>Tavsiye Sistemi</h1>
+        <p>Kullanıcıların tavsiye bırakabileceği özel kanal.</p>
+    </div>
+    <div class="card">
+        <button class="btn-ghost" onclick="window.location.reload();">↻ Kanalları Yenile</button>
+        <form action="/guncelle-tavsiye" method="post" style="margin-top:12px;">
+            <label>Tavsiye Kanalı</label>
+            <select name="kanal">{% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.tavsiye_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}</select>
+            <label>Başlık Etiketi</label>
+            <input type="text" name="baslik" value="{{ ayarlar.tavsiye_baslik }}">
+            <button type="submit" class="btn">Kaydet</button>
+        </form>
+    </div>
+</div>
+
+<!-- MOD LOG -->
+<div id="log" class="tab">
+    <div class="page-head">
+        <h1>Mod Log (Denetim Günlüğü)</h1>
+        <p>Sunucu içi güvenlik ve moderasyon olaylarının raporlandığı kanal.</p>
+    </div>
+    <div class="card">
+        <button class="btn-ghost" onclick="window.location.reload();">↻ Kanalları Yenile</button>
+        <form action="/guncelle-log" method="post" style="margin-top:12px;">
+            <label>Log Bildirim Kanalı</label>
+            <select name="log_kanal">{% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.log_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}</select>
+            <button type="submit" class="btn">Kaydet</button>
+        </form>
+    </div>
+</div>
+
+<!-- YOUTUBE -->
+<div id="youtube" class="tab">
+    <div class="page-head">
+        <h1>YouTube Otomatik Bildirim</h1>
+        <p>Kanal linkini, @handle veya ID'sini yapıştır; yeni içerikleri otomatik duyursun.</p>
+    </div>
+    <div class="card">
+        <button class="btn-ghost" onclick="window.location.reload();">↻ Kanalları Yenile</button>
+        <div class="hint">
+            <b>Esnek Giriş Desteği:</b><br>
+            Buraya doğrudan <b>https://www.youtube.com/@ardinus</b> linkini, <b>@ardinus</b> yazısını veya <b>UC...</b> ile başlayan kanal ID'sini yapıştırabilirsin. Sistem hepsini otomatik tanır.<br>
+            Mesaj şablonunda <b>{link}</b> veya <b>{baslik}</b> etiketlerini kullanabilirsin.
+        </div>
+        <form action="/guncelle-youtube" method="post">
+            <label>YouTube Kanal Linki, @handle veya ID</label>
+            <input type="text" name="youtube_channel_id" placeholder="https://www.youtube.com/@ardinus veya @ardinus" value="{{ ayarlar.youtube_channel_id }}">
+            <label>Bildirimin Gideceği Discord Odası</label>
+            <select name="youtube_kanal">{% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.youtube_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}</select>
+            <label>Otomatik Paylaşım Mesajı</label>
+            <div class="row" style="margin-bottom:8px;">
+                <button type="button" class="tag" onclick="ekleMetin('yt_mesaj', '@everyone ')">+ @everyone</button>
+                <button type="button" class="tag" onclick="ekleMetin('yt_mesaj', '{link}')">+ {link}</button>
+                <button type="button" class="tag" onclick="ekleMetin('yt_mesaj', '{baslik}')">+ {baslik}</button>
+            </div>
+            <textarea id="yt_mesaj" name="youtube_mesaj">{{ ayarlar.youtube_mesaj }}</textarea>
+            <button type="submit" class="btn">Kaydet</button>
+        </form>
+    </div>
+</div>
+
+<!-- DUYURU -->
+<div id="duyuru" class="tab">
+    <div class="page-head">
+        <h1>Canlı Duyuru Gönder</h1>
+        <p>Discord'a girmeden doğrudan bu panelden istediğin kanala etiketli duyuru gönder.</p>
+    </div>
+    <div class="card">
+        <button class="btn-ghost" onclick="window.location.reload();">↻ Kanalları Yenile</button>
+        <form action="/duyuru-gonder" method="post" style="margin-top:12px;">
+            <label>Duyurunun Atılacağı Sohbet Odası</label>
+            <select name="hedef_kanal">{% for k in kanallar %}<option value="{{ k }}">#{{ k }}</option>{% endfor %}</select>
+            <label>Hızlı Etiket Ekle</label>
+            <div class="row" style="margin-bottom:8px;">
+                <button type="button" class="tag" onclick="ekleMetin('duyuru_metni', '@everyone ')">+ @everyone</button>
+                <button type="button" class="tag" onclick="ekleMetin('duyuru_metni', '@here ')">+ @here</button>
+            </div>
+            <label>Duyuru Mesajın</label>
+            <textarea id="duyuru_metni" name="duyuru_mesaji" placeholder="Buraya sunucuya göndermek istediğin duyuruyu yaz..." required></textarea>
+            <button type="submit" class="btn">Gönder</button>
+        </form>
+    </div>
+</div>
+
+<!-- TICKET -->
+<div id="ticket" class="tab">
+    <div class="page-head">
+        <h1>Ticket (Destek) Sistemi</h1>
+        <p>Üyeler butona tıklayarak özel destek kanalı açabilir.</p>
+    </div>
+    <div class="card">
+        <button class="btn-ghost" onclick="window.location.reload();">↻ Kanalları ve Rolleri Yenile</button>
+        <form action="/ticket-panel-gonder" method="post" style="margin-top:12px;">
+            <label>Panelin Gönderileceği Kanal</label>
+            <select name="ticket_panel_kanal">
+                <option value="" {% if not ayarlar.ticket_panel_kanal %}selected{% endif %}>Kapalı</option>
+                {% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.ticket_panel_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}
+            </select>
+            <label>Ticket Kategorisi</label>
+            <input type="text" name="ticket_kategori" value="{{ ayarlar.ticket_kategori }}">
+            <label>Destek Rolü</label>
+            <select name="ticket_destek_rol_id">
+                <option value="0" {% if not ayarlar.ticket_destek_rol_id %}selected{% endif %}>Rol seçme</option>
+                {% for r in roller %}<option value="{{ r.id }}" {% if r.id == ayarlar.ticket_destek_rol_id %}selected{% endif %}>@{{ r.name }}</option>{% endfor %}
+            </select>
+            <label>Log Kanalı</label>
+            <select name="ticket_log_kanal">
+                <option value="" {% if not ayarlar.ticket_log_kanal %}selected{% endif %}>Kapalı</option>
+                {% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.ticket_log_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}
+            </select>
+            <label>Panel Mesajı</label>
+            <input type="text" name="ticket_mesaj" value="{{ ayarlar.ticket_mesaj }}">
+            <button type="submit" class="btn">Ticket Panelini Gönder</button>
+        </form>
+    </div>
+</div>
+
+<!-- MÜZİK -->
+<div id="muzik" class="tab">
+    <div class="page-head">
+        <h1>Müzik Sistemi</h1>
+        <p>Ses kanalında müzik çal, kuyruk yönet, ses ayarla.</p>
+    </div>
+    <div class="card">
+        <button class="btn-ghost" onclick="window.location.reload();">↻ Yenile</button>
+        <form action="/guncelle-muzik" method="post" style="margin-top:12px;">
+            <label>Varsayılan Ses Seviyesi (%)</label>
+            <input type="number" name="muzik_varsayilan_ses" min="0" max="100" value="{{ ayarlar.muzik_varsayilan_ses }}">
+            <label>Maksimum Kuyruk Uzunluğu</label>
+            <input type="number" name="muzik_max_kuyruk" min="1" max="200" value="{{ ayarlar.muzik_max_kuyruk }}">
+            <button type="submit" class="btn">Kaydet</button>
+        </form>
+    </div>
+</div>
+
+<!-- KOD UZANTISI -->
+<div id="kod" class="tab">
+    <div class="page-head">
+        <h1>Harici Python Kod Editörü</h1>
+        <p>Buraya yazdığın kodlar bot her başladığında otomatik çalışır.</p>
+    </div>
+    <p style="color:{{ uzanti_renk }}; font-weight:600; margin-bottom:12px;">Durum: {{ uzanti_durumu }}</p>
+    <div class="card">
+        <form action="/guncelle-kod" method="post">
+            <textarea class="code" name="yeni_kod">{{ kod_icerigi }}</textarea>
+            <br><br>
+            <button type="submit" class="btn">Kodu Kaydet ve Botu Yeniden Başlat</button>
+        </form>
+    </div>
+</div>
+
+</div>
+</div>
+
+<script>
+function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    if (btn) btn.classList.add('active');
+    var el = document.getElementById('currentTab');
+    if (el && btn) el.textContent = btn.textContent.trim();
+}
+function ekleMetin(elementId, metin) {
+    const alan = document.getElementById(elementId);
+    if (!alan) return;
+    alan.value += metin;
+    alan.focus();
+}
+function filterPlugins() {
+    const input = document.getElementById('pluginSearch').value.toLowerCase();
+    document.querySelectorAll('.menu-btn').forEach(btn => {
+        btn.style.display = btn.innerText.toLowerCase().includes(input) ? 'flex' : 'none';
+    });
+}
+
+(function () {
+    const botAktif = {{ "true" if bot_aktif else "false" }};
+    if (botAktif) return;
+    const durumYazisi = document.querySelector('.status');
+    let deneme = 0;
+    let zamanlayici = null;
+    async function kontrolEt() {
+        deneme += 1;
+        try {
+            const yanit = await fetch('/api/durum', { cache: 'no-store' });
+            if (!yanit.ok) return;
+            const veri = await yanit.json();
+            if (durumYazisi) durumYazisi.innerHTML = '<span class="dot"></span><span>' + veri.durum + '</span>';
+            if (veri.hazir && veri.durum === 'Aktif (çalışıyor)') {
+                clearInterval(zamanlayici);
+                window.location.reload();
+                return;
             }
-
-            function ekleMetin(elementId, metin) {
-                const alan = document.getElementById(elementId);
-                alan.value += metin;
-                alan.focus();
+            if (veri.durum.includes('Hata') || veri.durum.includes('Token yok')) {
+                clearInterval(zamanlayici);
+                window.location.reload();
             }
+        } catch (hata) { }
+        if (deneme >= 60) clearInterval(zamanlayici);
+    }
+    zamanlayici = setInterval(kontrolEt, 2000);
+    setTimeout(kontrolEt, 400);
+})();
 
-            function filterPlugins() {
-                const input = document.getElementById('pluginSearch').value.toLowerCase();
-                document.querySelectorAll('.menu-btn').forEach(btn => {
-                    btn.style.display = btn.innerText.toLowerCase().includes(input) ? 'flex' : 'none';
-                });
-            }
-
-            // Bot "Başlatılıyor..." durumundayken sayfa kendini yenilesin.
-            // Böylece kanal ve rol listeleri de otomatik gelir.
-            (function () {
-                const botAktif = {{ "true" if bot_aktif else "false" }};
-                if (botAktif) {
-                    return;
-                }
-
-                const durumYazisi = document.querySelector('.server-info p');
-                let deneme = 0;
-                let zamanlayici = null;
-
-                async function kontrolEt() {
-                    deneme += 1;
-                    try {
-                        const yanit = await fetch('/api/durum', { cache: 'no-store' });
-                        if (!yanit.ok) {
-                            return;
-                        }
-                        const veri = await yanit.json();
-                        if (durumYazisi) {
-                            durumYazisi.textContent = veri.durum;
-                        }
-                        if (veri.hazir && veri.durum === 'Aktif (Çalışıyor)') {
-                            clearInterval(zamanlayici);
-                            window.location.reload();
-                            return;
-                        }
-                        if (veri.durum.includes('Hata') || veri.durum.includes('Token yok')) {
-                            clearInterval(zamanlayici);
-                            window.location.reload();
-                        }
-                    } catch (hata) {
-                        // Panel sunucusu yeniden başlıyor olabilir; sessizce devam et.
-                    }
-                    if (deneme >= 60) {
-                        clearInterval(zamanlayici);
-                    }
-                }
-
-                zamanlayici = setInterval(kontrolEt, 2000);
-                setTimeout(kontrolEt, 400);
-            })();
-        </script>
-    </body>
-    </html>
+window.addEventListener('load', function () {
+    const hash = window.location.hash.replace('#', '');
+    if (!hash) return;
+    const btn = Array.from(document.querySelectorAll('.menu-btn')).find(
+        b => (b.getAttribute('onclick') || '').includes("'" + hash + "'")
+    );
+    if (btn) switchTab(hash, btn);
+});
+</script>
+</body>
+</html>

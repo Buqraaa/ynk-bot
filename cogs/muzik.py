@@ -200,6 +200,21 @@ def _extract(query):
                     }
                     if cookie_val:
                         opts["cookiefile"] = cookie_val
+                        # Ekstra: Cookie header olarak da gonder (yt-dlp cookiefile okumazsa)
+                        try:
+                            cookie_header = ""
+                            with open(cookie_val, "r") as cf:
+                                for line in cf:
+                                    line = line.strip()
+                                    if not line or line.startswith("#"):
+                                        continue
+                                    parts = line.split("\\t")
+                                    if len(parts) >= 7:
+                                        cookie_header += f"{parts[5]}={parts[6]}; "
+                            if cookie_header:
+                                opts["http_headers"]["Cookie"] = cookie_header.strip().rstrip(";")
+                        except Exception:
+                            pass
                     with yt_dlp.YoutubeDL(opts) as ydl:
                         info2 = ydl.extract_info(video_url, download=False)
                         audio_url = info2.get("url")

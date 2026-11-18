@@ -52,6 +52,8 @@ YTDLP_OPTIONS = {
 }
 
 
+
+
 class Track:
     def __init__(self, title, url, webpage_url, duration):
         self.title = title
@@ -63,16 +65,59 @@ class Track:
 def _extract(query):
     import yt_dlp
 
-    opts = dict(YTDLP_OPTIONS)
-    with yt_dlp.YoutubeDL(opts) as ydl:
+    # 1. Arama: web client (search destekler)
+    opts_search = dict(YTDLP_OPTIONS)
+    with yt_dlp.YoutubeDL(opts_search) as ydl:
         info = ydl.extract_info(query, download=False)
         if "entries" in info and info["entries"]:
             info = info["entries"][0]
+        video_url = info.get("webpage_url") or info.get("url")
+        title = info.get("title", "Bilinmeyen")
+        duration = info.get("duration", 0)
+
+    # 2. Ses URL'si cekme: sirayla farkli client'lar dene (bot engelini asar)
+    clients = [
+        ("android", {"player_client": ["android"], "User-Agent": "com.google.android.youtube/19.09.37 (Linux; U; Android 10) gzip"}),
+        ("ios", {"player_client": ["ios"], "User-Agent": "com.google.ios.youtube/19.09.37 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)"}),
+        ("mweb", {"player_client": ["mweb"], "User-Agent": "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36"}),
+        ("web", {"player_client": ["web"], "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}),
+    ]
+
+    for client_name, client_opts in clients:
+        try:
+            opts = {
+                "format": "bestaudio/best",
+                "noplaylist": True,
+                "quiet": True,
+                "no_warnings": True,
+                "source_address": "0.0.0.0",
+                "extractor_args": {"youtube": {"player_client": [client_opts["player_client"][0]]}},
+                "http_headers": {"User-Agent": client_opts["User-Agent"]},
+            }
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                info2 = ydl.extract_info(video_url, download=False)
+                audio_url = info2.get("url")
+                if audio_url:
+                    logger.info("Muzik: %s client ile ses URL'si alindi", client_name)
+                    return Track(
+                        title=title,
+                        url=audio_url,
+                        webpage_url=video_url,
+                        duration=duration,
+                    )
+        except Exception as e:
+            logger.warning("Muzik: %s client basarisiz: %s", client_name, str(e)[:100])
+            continue
+
+    # Son care: varsayilan ile dene
+    opts_web = dict(YTDLP_OPTIONS)
+    with yt_dlp.YoutubeDL(opts_web) as ydl:
+        info3 = ydl.extract_info(video_url, download=False)
         return Track(
-            title=info.get("title", "Bilinmeyen"),
-            url=info.get("url"),
-            webpage_url=info.get("webpage_url", query),
-            duration=info.get("duration", 0),
+            title=title,
+            url=info3.get("url"),
+            webpage_url=video_url,
+            duration=duration,
         )
 
 

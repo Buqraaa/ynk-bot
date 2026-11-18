@@ -9,7 +9,14 @@ import db
 
 # PyInstaller ile derlendiginde ayarlar exe'nin yaninda, sablonlar ise gecici
 # bundle klasorunde durur. Gelistirme sirasinda ikisi de proje klasorundedir.
-if getattr(sys, "frozen", False):
+# Sunucu ortamlarinda (Railway, Docker) veri dizini env var ile degistirilebilir.
+# Boylece volume mount edilen klasore ayarlar/DB yazilir ve restart'ta kaybolmaz.
+_data_dir_env = os.environ.get("DATA_DIR", "").strip()
+if _data_dir_env:
+    APP_DIR = Path(_data_dir_env).resolve()
+    APP_DIR.mkdir(parents=True, exist_ok=True)
+    BUNDLE_DIR = APP_DIR
+elif getattr(sys, "frozen", False):
     APP_DIR = Path(sys.executable).resolve().parent
     BUNDLE_DIR = Path(getattr(sys, "_MEIPASS", APP_DIR))
 else:

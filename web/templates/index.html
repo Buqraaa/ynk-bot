@@ -42,7 +42,9 @@ body {
     font-size: 14px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    visibility: hidden;
 }
+body.ready { visibility: visible; }
 
 /* animated background - floating particles */
 .bg-anim {
@@ -925,11 +927,13 @@ function filterPlugins() {
 
 window.addEventListener('load', function () {
     const hash = window.location.hash.replace('#', '');
-    if (!hash) return;
-    const btn = Array.from(document.querySelectorAll('.menu-btn')).find(
-        b => (b.getAttribute('onclick') || '').includes("'" + hash + "'")
-    );
-    if (btn) switchTab(hash, btn);
+    if (hash) {
+        const btn = Array.from(document.querySelectorAll('.menu-btn')).find(
+            b => (b.getAttribute('onclick') || '').includes("'" + hash + "'")
+        );
+        if (btn) switchTab(hash, btn);
+    }
+    document.body.classList.add('ready');
 });
 </script>
 </body>

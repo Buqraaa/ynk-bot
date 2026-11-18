@@ -52,8 +52,8 @@ def hosgeldin_gorseli_olustur(
     mesaj="Sunucumuza katıldı",
     arka_plan_renk=(15, 20, 35),
     vurgu_renk=(88, 101, 242),
-    genislik=800,
-    yukseklik=300,
+    genislik=1000,
+    yukseklik=400,
 ):
     """Hosgeldin gorseli olusturur ve PNG bytes dondurur."""
     img = Image.new("RGBA", (genislik, yukseklik), arka_plan_renk + (255,))
@@ -71,13 +71,13 @@ def hosgeldin_gorseli_olustur(
     draw.rectangle([(0, 0), (6, yukseklik)], fill=vurgu_renk + (255,))
 
     # Avatar (sol taraf, ortalanmis)
-    avatar_boyut = 140
+    avatar_boyut = 180
     avatar = _yuvarlak_avatar(avatar_bytes, avatar_boyut)
-    avatar_x = 40
+    avatar_x = 50
     avatar_y = (yukseklik - avatar_boyut) // 2
 
     # Avatar cercevesi
-    cerceve_padding = 6
+    cerceve_padding = 8
     draw.ellipse(
         (
             avatar_x - cerceve_padding,
@@ -86,31 +86,31 @@ def hosgeldin_gorseli_olustur(
             avatar_y + avatar_boyut + cerceve_padding,
         ),
         outline=vurgu_renk + (255,),
-        width=3,
+        width=4,
     )
 
     img.paste(avatar, (avatar_x, avatar_y), avatar)
 
     # Metin (sag taraf)
-    metin_x = avatar_x + avatar_boyut + 40
-    metin_y = 60
+    metin_x = avatar_x + avatar_boyut + 50
+    metin_y = 80
 
-    font_baslik = _font(36, bold=True)
-    font_isim = _font(28, bold=True)
-    font_alt = _font(16)
-    font_sayi = _font(14)
+    font_baslik = _font(48, bold=True)
+    font_isim = _font(36, bold=True)
+    font_alt = _font(20)
+    font_sayi = _font(16)
 
     # Baslik
     draw.text((metin_x, metin_y), baslik, font=font_baslik, fill=(255, 255, 255, 255))
-    metin_y += 45
+    metin_y += 60
 
     # Uye adi
     draw.text((metin_x, metin_y), uye_adi, font=font_isim, fill=vurgu_renk + (255,))
-    metin_y += 38
+    metin_y += 50
 
     # Mesaj
     draw.text((metin_x, metin_y), mesaj, font=font_alt, fill=(180, 185, 200, 255))
-    metin_y += 28
+    metin_y += 35
 
     # Sunucu adi ve uye sayisi
     draw.text((metin_x, metin_y), f"{sunucu_adi}  •  Üye #{uye_sayisi}", font=font_sayi, fill=(120, 125, 140, 255))

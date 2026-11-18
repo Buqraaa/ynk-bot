@@ -64,7 +64,6 @@ async def test_mesaji_gonder(bot, guild):
     if uye is None:
         raise RuntimeError("Botun sunucu üyeliği bulunamadı")
 
-    embed = _karsilama_embed(uye, test=True)
     dosyalar = []
     if BOT_AYARLARI.get("hosgeldin_gorsel", True):
         try:
@@ -80,11 +79,13 @@ async def test_mesaji_gonder(bot, guild):
                 mesaj=BOT_AYARLARI.get("hosgeldin_gorsel_mesaj") or "Sunucumuza katıldı",
             )
             dosya = discord.File(io.BytesIO(gorsel), filename="hosgeldin.png")
-            embed.set_image(url="attachment://hosgeldin.png")
             dosyalar.append(dosya)
         except Exception:
             logger.exception("Hosgeldin gorseli olusturulamadi")
-    await kanal.send(embed=embed, files=dosyalar)
+    if dosyalar:
+        await kanal.send(content=uye.mention, files=dosyalar)
+    else:
+        await kanal.send(content=uye.mention, embed=_karsilama_embed(uye, test=True))
     logger.info("Karşılama test mesajı gönderildi: #%s", kanal.name)
 
 
@@ -136,7 +137,6 @@ class Karsilama(commands.Cog):
             return
 
         try:
-            embed = _karsilama_embed(member)
             dosyalar = []
             if BOT_AYARLARI.get("hosgeldin_gorsel", True):
                 try:
@@ -150,15 +150,13 @@ class Karsilama(commands.Cog):
                         mesaj=BOT_AYARLARI.get("hosgeldin_gorsel_mesaj") or "Sunucumuza katıldı",
                     )
                     dosya = discord.File(io.BytesIO(gorsel), filename="hosgeldin.png")
-                    embed.set_image(url="attachment://hosgeldin.png")
                     dosyalar.append(dosya)
                 except Exception:
                     logger.exception("Hosgeldin gorseli olusturulamadi")
-            await kanal.send(
-                content=member.mention,
-                embed=embed,
-                files=dosyalar,
-            )
+            if dosyalar:
+                await kanal.send(content=member.mention, files=dosyalar)
+            else:
+                await kanal.send(content=member.mention, embed=_karsilama_embed(member))
         except Exception:
             logger.exception("Karşılama mesajı gönderilemedi")
 

@@ -46,7 +46,7 @@ body {
 }
 body.ready { visibility: visible; }
 
-/* animated background - floating particles */
+/* animated background - winter snow */
 .bg-anim {
     position: fixed;
     inset: 0;
@@ -54,39 +54,38 @@ body.ready { visibility: visible; }
     overflow: hidden;
     pointer-events: none;
 }
-.bg-anim .particle {
+.bg-anim .snow {
     position: absolute;
     border-radius: 50%;
-    background: rgba(88,101,242,0.35);
-    animation: floatUp linear infinite;
+    background: rgba(200, 220, 255, 0.5);
+    animation: snowFall linear infinite;
 }
-.bg-anim .particle:nth-child(1) { width: 3px; height: 3px; left: 10%; animation-duration: 18s; animation-delay: 0s; }
-.bg-anim .particle:nth-child(2) { width: 2px; height: 2px; left: 25%; animation-duration: 22s; animation-delay: -3s; }
-.bg-anim .particle:nth-child(3) { width: 4px; height: 4px; left: 40%; animation-duration: 26s; animation-delay: -7s; opacity: 0.6; }
-.bg-anim .particle:nth-child(4) { width: 2px; height: 2px; left: 55%; animation-duration: 20s; animation-delay: -12s; }
-.bg-anim .particle:nth-child(5) { width: 3px; height: 3px; left: 70%; animation-duration: 24s; animation-delay: -5s; }
-.bg-anim .particle:nth-child(6) { width: 2px; height: 2px; left: 85%; animation-duration: 19s; animation-delay: -9s; }
-.bg-anim .particle:nth-child(7) { width: 3px; height: 3px; left: 15%; animation-duration: 28s; animation-delay: -15s; opacity: 0.5; }
-.bg-anim .particle:nth-child(8) { width: 2px; height: 2px; left: 60%; animation-duration: 21s; animation-delay: -2s; }
-@keyframes floatUp {
-    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
-    10% { opacity: 0.6; }
-    90% { opacity: 0.6; }
-    100% { transform: translateY(-10vh) translateX(20px); opacity: 0; }
+.bg-anim .snow:nth-child(1) { width: 4px; height: 4px; left: 5%; animation-duration: 12s; animation-delay: 0s; }
+.bg-anim .snow:nth-child(2) { width: 3px; height: 3px; left: 12%; animation-duration: 15s; animation-delay: -2s; }
+.bg-anim .snow:nth-child(3) { width: 5px; height: 5px; left: 20%; animation-duration: 18s; animation-delay: -5s; opacity: 0.7; }
+.bg-anim .snow:nth-child(4) { width: 2px; height: 2px; left: 28%; animation-duration: 14s; animation-delay: -8s; }
+.bg-anim .snow:nth-child(5) { width: 4px; height: 4px; left: 35%; animation-duration: 16s; animation-delay: -3s; }
+.bg-anim .snow:nth-child(6) { width: 3px; height: 3px; left: 42%; animation-duration: 20s; animation-delay: -10s; opacity: 0.6; }
+.bg-anim .snow:nth-child(7) { width: 5px; height: 5px; left: 50%; animation-duration: 13s; animation-delay: -1s; }
+.bg-anim .snow:nth-child(8) { width: 2px; height: 2px; left: 58%; animation-duration: 17s; animation-delay: -6s; }
+.bg-anim .snow:nth-child(9) { width: 4px; height: 4px; left: 65%; animation-duration: 19s; animation-delay: -12s; opacity: 0.7; }
+.bg-anim .snow:nth-child(10) { width: 3px; height: 3px; left: 72%; animation-duration: 15s; animation-delay: -4s; }
+.bg-anim .snow:nth-child(11) { width: 5px; height: 5px; left: 80%; animation-duration: 22s; animation-delay: -9s; opacity: 0.5; }
+.bg-anim .snow:nth-child(12) { width: 2px; height: 2px; left: 88%; animation-duration: 16s; animation-delay: -7s; }
+.bg-anim .snow:nth-child(13) { width: 4px; height: 4px; left: 95%; animation-duration: 14s; animation-delay: -14s; }
+.bg-anim .snow:nth-child(14) { width: 3px; height: 3px; left: 3%; animation-duration: 21s; animation-delay: -11s; opacity: 0.6; }
+.bg-anim .snow:nth-child(15) { width: 5px; height: 5px; left: 48%; animation-duration: 18s; animation-delay: -16s; opacity: 0.4; }
+@keyframes snowFall {
+    0% { transform: translateY(-10vh) translateX(0); opacity: 0; }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.8; }
+    100% { transform: translateY(105vh) translateX(15px); opacity: 0; }
 }
-/* subtle grid lines */
-.bg-anim .grid {
+/* subtle frost overlay */
+.bg-anim .frost {
     position: absolute;
     inset: 0;
-    background-image: 
-        linear-gradient(rgba(88,101,242,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(88,101,242,0.03) 1px, transparent 1px);
-    background-size: 60px 60px;
-    animation: gridShift 30s linear infinite;
-}
-@keyframes gridShift {
-    0% { transform: translate(0,0); }
-    100% { transform: translate(60px, 60px); }
+    background: radial-gradient(ellipse at 50% 0%, rgba(100,140,220,0.06) 0%, transparent 60%);
 }
 
 /* sidebar */
@@ -386,7 +385,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 </head>
 <body>
 
-<div class="bg-anim"><div class="grid"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div></div>
+<div class="bg-anim"><div class="frost"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div></div>
 
 <div class="sidebar">
     <div class="sidebar-head">

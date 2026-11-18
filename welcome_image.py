@@ -1,17 +1,16 @@
 """
 Hosgeldin gorseli olusturucu (Pillow).
-Kis (winter) temasi: buz mavisi, kar taneleri, soguk gradient.
 """
 import io
 import os
-import random
+from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
+# Varsayilan font yolu (sistem fontu)
 _FONT_CANDIDATES = [
     "C:/Windows/Fonts/segoeui.ttf",
     "C:/Windows/Fonts/arial.ttf",
-    "C:/Windows/Fonts/calibri.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
 ]
@@ -30,12 +29,15 @@ def _font(size, bold=False):
     return ImageFont.load_default()
 
 
-def _yuvarlak_avatar(avatar_bytes, boyut=160):
+def _yuvarlak_avatar(avatar_bytes, boyut=120):
+    """Avatar'i dairesel keser."""
     img = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA")
     img = img.resize((boyut, boyut), Image.LANCZOS)
+
     maske = Image.new("L", (boyut, boyut), 0)
     draw = ImageDraw.Draw(maske)
     draw.ellipse((0, 0, boyut, boyut), fill=255)
+
     sonuc = Image.new("RGBA", (boyut, boyut), (0, 0, 0, 0))
     sonuc.paste(img, (0, 0), maske)
     return sonuc
@@ -48,111 +50,73 @@ def hosgeldin_gorseli_olustur(
     uye_sayisi,
     baslik="Hoş geldin!",
     mesaj="Sunucumuza katıldı",
-    genislik=600,
-    yukseklik=450,
+    arka_plan_renk=(15, 20, 35),
+    vurgu_renk=(88, 101, 242),
+    genislik=800,
+    yukseklik=300,
 ):
     """Hosgeldin gorseli olusturur ve PNG bytes dondurur."""
-    random.seed(7)  # tutarli sonuc
-
-    # --- Arka plan: kis gokyuzu gradient (koyu lacivert -> buz mavisi) ---
-    img = Image.new("RGBA", (genislik, yukseklik), (0, 0, 0, 255))
+    img = Image.new("RGBA", (genislik, yukseklik), arka_plan_renk + (255,))
     draw = ImageDraw.Draw(img)
 
+    # Gradient arka plan (ustten alta)
     for y in range(yukseklik):
         oran = y / yukseklik
-        # koyu gece mavisi (#0a1628) -> buz mavisi (#1a2a4a)
-        r = int(10 + 16 * oran)
-        g = int(22 + 20 * oran)
-        b = int(40 + 35 * oran)
+        r = int(arka_plan_renk[0] + (vurgu_renk[0] - arka_plan_renk[0]) * oran * 0.3)
+        g = int(arka_plan_renk[1] + (vurgu_renk[1] - arka_plan_renk[1]) * oran * 0.3)
+        b = int(arka_plan_renk[2] + (vurgu_renk[2] - arka_plan_renk[2]) * oran * 0.3)
         draw.line([(0, y), (genislik, y)], fill=(r, g, b, 255))
 
-    # --- Kar taneleri (rastgele, farkli boyutlar) ---
-    for _ in range(80):
-        x = random.randint(0, genislik)
-        y = random.randint(0, yukseklik)
-        r = random.choice([1, 1, 2, 2, 3])
-        alpha = random.randint(40, 120)
-        # hafif mavi-beyaz kar tanesi
-        draw.ellipse(
-            (x - r, y - r, x + r, y + r),
-            fill=(200 + random.randint(0, 55), 210 + random.randint(0, 45), 230 + random.randint(0, 25), alpha),
-        )
+    # Vurgu cizgisi (sol kenar)
+    draw.rectangle([(0, 0), (6, yukseklik)], fill=vurgu_renk + (255,))
 
-    # --- Uzak kar tanesi (buyuk, bulanik hissi) ---
-    for _ in range(12):
-        x = random.randint(0, genislik)
-        y = random.randint(0, yukseklik)
-        r = random.randint(4, 8)
-        alpha = random.randint(8, 20)
-        draw.ellipse(
-            (x - r, y - r, x + r, y + r),
-            fill=(180, 200, 230, alpha),
-        )
-
-    # --- Sol kenar vurgu (buz mavisi) ---
-    for y in range(yukseklik):
-        oran = y / yukseklik
-        r = int(100 + 40 * oran)
-        g = int(160 + 40 * oran)
-        b = int(220 + 35 * oran)
-        for x in range(4):
-            draw.point((x, y), fill=(r, g, b, 200))
-
-    # --- Avatar (sol orta) ---
-    avatar_boyut = 160
+    # Avatar (sol taraf, ortalanmis)
+    avatar_boyut = 140
     avatar = _yuvarlak_avatar(avatar_bytes, avatar_boyut)
     avatar_x = 40
-    avatar_y = 85
+    avatar_y = (yukseklik - avatar_boyut) // 2
 
-    # Avatar cercevesi (buz mavisi)
+    # Avatar cercevesi
+    cerceve_padding = 6
     draw.ellipse(
         (
-            avatar_x - 5,
-            avatar_y - 5,
-            avatar_x + avatar_boyut + 5,
-            avatar_y + avatar_boyut + 5,
+            avatar_x - cerceve_padding,
+            avatar_y - cerceve_padding,
+            avatar_x + avatar_boyut + cerceve_padding,
+            avatar_y + avatar_boyut + cerceve_padding,
         ),
-        outline=(150, 200, 255, 255),
+        outline=vurgu_renk + (255,),
         width=3,
     )
 
     img.paste(avatar, (avatar_x, avatar_y), avatar)
 
-    # --- Metin (sag taraf) ---
-    metin_x = avatar_x + avatar_boyut + 30
-    metin_y = 85
+    # Metin (sag taraf)
+    metin_x = avatar_x + avatar_boyut + 40
+    metin_y = 60
 
     font_baslik = _font(36, bold=True)
-    font_isim = _font(26, bold=True)
-    font_alt = _font(15)
-    font_sayi = _font(13)
+    font_isim = _font(28, bold=True)
+    font_alt = _font(16)
+    font_sayi = _font(14)
 
-    # Baslik (buz mavisi)
-    draw.text((metin_x, metin_y), baslik, font=font_baslik, fill=(220, 235, 255, 255))
-    metin_y += 48
+    # Baslik
+    draw.text((metin_x, metin_y), baslik, font=font_baslik, fill=(255, 255, 255, 255))
+    metin_y += 45
 
-    # Uye adi (parlak buz mavisi)
-    draw.text((metin_x, metin_y), uye_adi, font=font_isim, fill=(150, 200, 255, 255))
+    # Uye adi
+    draw.text((metin_x, metin_y), uye_adi, font=font_isim, fill=vurgu_renk + (255,))
     metin_y += 38
 
     # Mesaj
-    draw.text((metin_x, metin_y), mesaj, font=font_alt, fill=(180, 200, 225, 255))
-    metin_y += 30
+    draw.text((metin_x, metin_y), mesaj, font=font_alt, fill=(180, 185, 200, 255))
+    metin_y += 28
 
     # Sunucu adi ve uye sayisi
-    draw.text((metin_x, metin_y), f"{sunucu_adi}  •  Üye #{uye_sayisi}", font=font_sayi, fill=(130, 150, 185, 255))
+    draw.text((metin_x, metin_y), f"{sunucu_adi}  •  Üye #{uye_sayisi}", font=font_sayi, fill=(120, 125, 140, 255))
 
-    # Alt bar (buz mavisi gradient)
-    bar_y = yukseklik - 45
-    bar_genislik = int(genislik * 0.55)
-    for i in range(bar_genislik):
-        oran = i / bar_genislik
-        r = int(100 + 50 * oran)
-        g = int(160 + 40 * oran)
-        b = int(220 + 35 * oran)
-        draw.line([(20 + i, bar_y), (20 + i, bar_y + 3)], fill=(r, g, b, 200))
-
+    # PNG olarak bytes'a cevir
     buf = io.BytesIO()
-    img.save(buf, format="PNG", optimize=True)
+    img.save(buf, format="PNG")
     buf.seek(0)
     return buf.getvalue()

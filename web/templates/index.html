@@ -87,17 +87,28 @@ body.ready { visibility: visible; }
     inset: 0;
     background: radial-gradient(ellipse at 50% 0%, rgba(100,140,220,0.06) 0%, transparent 60%);
 }
-/* cursor glow */
+/* cursor glow - small and stable */
 .cursor-glow {
     position: fixed;
-    width: 300px;
-    height: 300px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(88,101,242,0.08) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(88,101,242,0.12) 0%, transparent 70%);
     pointer-events: none;
     z-index: 1;
     transform: translate(-50%, -50%);
-    transition: left 0.1s ease, top 0.1s ease;
+    transition: none;
+    will-change: transform;
+}
+/* snow accumulation at bottom */
+.bg-anim .snow-pile {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: linear-gradient(180deg, rgba(200,220,255,0.08) 0%, rgba(200,220,255,0.15) 100%);
+    border-top: 1px solid rgba(200,220,255,0.1);
 }
 
 /* sidebar */
@@ -401,7 +412,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
 </head>
 <body>
 
-<div class="bg-anim"><div class="frost"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div></div>
+<div class="bg-anim"><div class="frost"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow"></div><div class="snow-pile"></div></div>
 <div class="cursor-glow" id="cursorGlow"></div>
 
 <div class="sidebar">
@@ -941,12 +952,11 @@ function filterPlugins() {
     setTimeout(kontrolEt, 400);
 })();
 
-// Mouse tracking - cursor glow
+// Mouse tracking - cursor glow (transform for performance)
 document.addEventListener('mousemove', function(e) {
     const glow = document.getElementById('cursorGlow');
     if (glow) {
-        glow.style.left = e.clientX + 'px';
-        glow.style.top = e.clientY + 'px';
+        glow.style.transform = 'translate(' + (e.clientX - 60) + 'px, ' + (e.clientY - 60) + 'px)';
     }
 });
 

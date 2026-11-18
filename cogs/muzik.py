@@ -51,19 +51,44 @@ YTDLP_OPTIONS = {
     "source_address": "0.0.0.0",
 }
 
+import base64
+import tempfile
+
 # Cookies dosyasi (Railway'de /app/data/cookies.txt olarak mount edilebilir)
+_COOKIES_CACHE = None
+
+
 def _cookies_dosyasi():
-    from config import APP_DIR
-    for ad in ("cookies.txt", "youtube_cookies.txt"):
-        yol = APP_DIR / ad
-        if yol.exists():
-            return str(yol)
-    # Kod dizininde de ara
-    from config import BUNDLE_DIR
-    for ad in ("cookies.txt", "youtube_cookies.txt"):
-        yol = BUNDLE_DIR / ad
-        if yol.exists():
-            return str(yol)
+    global _COOKIES_CACHE
+    if _COOKIES_CACHE is not None:
+        return _COOKIES_CACHE
+
+    # 1. Dosya olarak ara
+    from config import APP_DIR, BUNDLE_DIR
+
+    for base in (APP_DIR, BUNDLE_DIR):
+        for ad in ("cookies.txt", "youtube_cookies.txt"):
+            yol = base / ad
+            if yol.exists():
+                _COOKIES_CACHE = str(yol)
+                return _COOKIES_CACHE
+
+    # 2. Environment variable'dan (base64) olustur
+    b64 = os.environ.get("YOUTUBE_COOKIES_B64", "").strip()
+    if b64:
+        try:
+            icerik = base64.b64decode(b64)
+            # Gecici dosyaya yaz
+            fd, yol = tempfile.mkstemp(suffix=".txt", prefix="yt_cookies_")
+            with os.fdopen(fd, "wb") as f:
+                f.write(icerik)
+            _COOKIES_CACHE = yol
+            logger.info("YouTube cookies env var'dan yuklendi")
+            return _COOKIES_CACHE
+        except Exception as e:
+            logger.warning("YouTube cookies decode hatasi: %s", e)
+
+    _COOKIES_CACHE = None
     return None
 
 

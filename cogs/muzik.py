@@ -43,7 +43,6 @@ FFMPEG_OPTIONS = {
 }
 
 YTDLP_OPTIONS = {
-    "format": "bestaudio/best",
     "noplaylist": True,
     "quiet": True,
     "no_warnings": True,
@@ -129,7 +128,6 @@ def _extract(query):
     for client_name, client_opts in clients:
         try:
             opts = {
-                "format": "bestaudio/best",
                 "noplaylist": True,
                 "quiet": True,
                 "no_warnings": True,

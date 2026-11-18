@@ -65,7 +65,26 @@ async def test_mesaji_gonder(bot, guild):
         raise RuntimeError("Botun sunucu üyeliği bulunamadı")
 
     embed = _karsilama_embed(uye, test=True)
-    await kanal.send(embed=embed)
+    dosyalar = []
+    if BOT_AYARLARI.get("hosgeldin_gorsel", True):
+        try:
+            import io
+
+            avatar_bytes = await uye.display_avatar.read()
+            gorsel = hosgeldin_gorseli_olustur(
+                avatar_bytes=avatar_bytes,
+                uye_adi=uye.display_name,
+                sunucu_adi=guild.name,
+                uye_sayisi=guild.member_count,
+                baslik=BOT_AYARLARI.get("hosgeldin_gorsel_baslik") or "Hoş geldin!",
+                mesaj=BOT_AYARLARI.get("hosgeldin_gorsel_mesaj") or "Sunucumuza katıldı",
+            )
+            dosya = discord.File(io.BytesIO(gorsel), filename="hosgeldin.png")
+            embed.set_image(url="attachment://hosgeldin.png")
+            dosyalar.append(dosya)
+        except Exception:
+            logger.exception("Hosgeldin gorseli olusturulamadi")
+    await kanal.send(embed=embed, files=dosyalar)
     logger.info("Karşılama test mesajı gönderildi: #%s", kanal.name)
 
 

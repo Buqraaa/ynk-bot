@@ -33,8 +33,8 @@ def main():
     )
     server_thread.start()
 
-    if _sunucu_hazir_mi("http://127.0.0.1:8000"):
-        print("[YNK] Panel hazir: http://0.0.0.0:8000")
+    if _sunucu_hazir_mi(f"http://127.0.0.1:{PORT}"):
+        print(f"[YNK] Panel hazir: http://0.0.0.0:{PORT}")
     else:
         print("[YNK] Panel baslatilamadi!")
 

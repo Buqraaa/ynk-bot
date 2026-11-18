@@ -138,39 +138,41 @@ def _extract(query):
         ("web", {"player_client": ["web"], "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}),
     ]
 
+    cookies = _cookies_dosyasi()
+    if cookies:
+        try:
+            with open(cookies, "r") as f:
+                first_lines = f.read(200)
+            logger.info("Muzik: cookies dosyasi okundu, boyut=%s, ilk satirlar: %s", len(first_lines), first_lines[:100].replace(chr(10), " "))
+        except Exception as e:
+            logger.warning("Muzik: cookies dosyasi okunamadi: %s", e)
+
     for client_name, client_opts in clients:
-        for fmt in ("bestaudio/best", None):
-            try:
-                opts = {
-                    "noplaylist": True,
-                    "quiet": True,
-                    "no_warnings": True,
-                    "source_address": "0.0.0.0",
-                    "extractor_args": {"youtube": {"player_client": [client_opts["player_client"][0]]}},
-                    "http_headers": {"User-Agent": client_opts["User-Agent"]},
-                }
-                if fmt:
-                    opts["format"] = fmt
-                cookies = _cookies_dosyasi()
-                if cookies:
-                    opts["cookiefile"] = cookies
-                with yt_dlp.YoutubeDL(opts) as ydl:
-                    info2 = ydl.extract_info(video_url, download=False)
-                    audio_url = info2.get("url")
-                    if audio_url:
-                        logger.info("Muzik: %s client ile ses URL'si alindi (fmt=%s)", client_name, fmt)
-                        return Track(
-                            title=title,
-                            url=audio_url,
-                            webpage_url=video_url,
-                            duration=duration,
-                        )
-            except Exception as e:
-                err = str(e)[:120]
-                if "format" in err.lower() or "not available" in err.lower():
-                    continue  # format hatasi, formatsiz dene
-                logger.warning("Muzik: %s client basarisiz: %s", client_name, err)
-                break  # baska hata, sonraki client'a gec
+        try:
+            opts = {
+                "quiet": True,
+                "no_warnings": True,
+                "source_address": "0.0.0.0",
+                "extractor_args": {"youtube": {"player_client": [client_opts["player_client"][0]]}},
+                "http_headers": {"User-Agent": client_opts["User-Agent"]},
+            }
+            if cookies:
+                opts["cookiefile"] = cookies
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                info2 = ydl.extract_info(video_url, download=False)
+                audio_url = info2.get("url")
+                if audio_url:
+                    logger.info("Muzik: %s client ile ses URL'si alindi", client_name)
+                    return Track(
+                        title=title,
+                        url=audio_url,
+                        webpage_url=video_url,
+                        duration=duration,
+                    )
+        except Exception as e:
+            err = str(e)[:150]
+            logger.warning("Muzik: %s client basarisiz: %s", client_name, err)
+            continue
 
     # Son care: varsayilan ile dene
     opts_web = dict(YTDLP_OPTIONS)

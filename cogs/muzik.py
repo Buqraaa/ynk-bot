@@ -78,12 +78,14 @@ def _cookies_dosyasi():
     if b64:
         try:
             icerik = base64.b64decode(b64)
-            # Gecici dosyaya yaz
+            if len(icerik) < 200:
+                logger.warning("YouTube cookies cok kucuk (%d byte), kullanilmiyor", len(icerik))
+                return None
             fd, yol = tempfile.mkstemp(suffix=".txt", prefix="yt_cookies_")
             with os.fdopen(fd, "wb") as f:
                 f.write(icerik)
             _COOKIES_CACHE = yol
-            logger.info("YouTube cookies env var'dan yuklendi")
+            logger.info("YouTube cookies env var'dan yuklendi (%d byte)", len(icerik))
             return _COOKIES_CACHE
         except Exception as e:
             logger.warning("YouTube cookies decode hatasi: %s", e)
@@ -107,6 +109,7 @@ def _extract(query):
 
     # 1. Arama: web client (search destekler)
     import time as _time
+    info = None
     for _deneme in range(3):
         try:
             opts_search = dict(YTDLP_OPTIONS)
@@ -128,23 +131,26 @@ def _extract(query):
                     _time.sleep(2)
                     continue
             raise
-        if "entries" in info and info["entries"]:
-            info = info["entries"][0]
-        video_id = info.get("id") or info.get("url", "").split("v=")[-1].split("&")[0]
-        if not video_id or video_id == query:
-            # URL'den ID cikar
-            url = info.get("url", "")
-            if "v=" in url:
-                video_id = url.split("v=")[-1].split("&")[0]
-            elif "youtu.be/" in url:
-                video_id = url.split("youtu.be/")[-1].split("?")[0]
-        video_url = f"https://www.youtube.com/watch?v={video_id}" if video_id else (info.get("webpage_url") or info.get("url"))
-        title = info.get("title", "Bilinmeyen")
-        duration = info.get("duration", 0) or 0
 
-        # Arama ve cekim arasinda kisa bekleme (rate limiting onleme)
-        import time as _t
-        _t.sleep(1)
+    if info is None:
+        raise RuntimeError("Arama basarisiz")
+
+    if "entries" in info and info.get("entries"):
+        info = info["entries"][0]
+    video_id = info.get("id") or info.get("url", "").split("v=")[-1].split("&")[0]
+    if not video_id or video_id == query:
+        url = info.get("url", "")
+        if "v=" in url:
+            video_id = url.split("v=")[-1].split("&")[0]
+        elif "youtu.be/" in url:
+            video_id = url.split("youtu.be/")[-1].split("?")[0]
+    video_url = f"https://www.youtube.com/watch?v={video_id}" if video_id else (info.get("webpage_url") or info.get("url"))
+    title = info.get("title", "Bilinmeyen")
+    duration = info.get("duration", 0) or 0
+
+    # Arama ve cekim arasinda kisa bekleme (rate limiting onleme)
+    import time as _t
+    _t.sleep(1)
 
     # 2. Ses URL'si cekme: sirayla farkli client'lar dene (bot engelini asar)
     clients = [
@@ -169,6 +175,7 @@ def _extract(query):
                 "quiet": True,
                 "no_warnings": True,
                 "source_address": "0.0.0.0",
+                "format": "bestaudio/best",
                 "extractor_args": {"youtube": {"player_client": [client_opts["player_client"][0]]}},
                 "http_headers": {"User-Agent": client_opts["User-Agent"]},
             }
@@ -195,7 +202,6 @@ def _extract(query):
     cookies = _cookies_dosyasi()
     if cookies:
         opts_web["cookiefile"] = cookies
-    opts_web.pop("format", None)
     with yt_dlp.YoutubeDL(opts_web) as ydl:
         info3 = ydl.extract_info(video_url, download=False)
         return Track(

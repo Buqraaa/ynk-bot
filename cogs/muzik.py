@@ -81,6 +81,11 @@ def _cookies_dosyasi():
             if len(icerik) < 200:
                 logger.warning("YouTube cookies cok kucuk (%d byte), kullanilmiyor", len(icerik))
                 return None
+            # Netscape header eksikse ekle (yt-dlp format kontrolu)
+            text = icerik.decode("utf-8", errors="replace")
+            if "Netscape HTTP Cookie File" not in text:
+                text = "# Netscape HTTP Cookie File\\n# https://curl.haxx.se/rfc/cookie_spec.html\\n# This is a generated file! Do not edit.\\n" + text
+                icerik = text.encode("utf-8")
             fd, yol = tempfile.mkstemp(suffix=".txt", prefix="yt_cookies_")
             with os.fdopen(fd, "wb") as f:
                 f.write(icerik)

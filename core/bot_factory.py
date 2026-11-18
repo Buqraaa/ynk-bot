@@ -15,6 +15,9 @@ EXTENSIONS = (
     "cogs.youtube",
     "cogs.tickets",
     "cogs.muzik",
+    "cogs.xp",
+    "cogs.cekilis",
+    "cogs.automod",
 )
 
 # Kanal adi -> kanal ID migrasyonu bu anahtarlar icin yapilir.

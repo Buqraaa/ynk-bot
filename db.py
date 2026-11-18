@@ -60,6 +60,40 @@ def init_db():
                     created_at TEXT NOT NULL,
                     closed_at TEXT
                 );
+                CREATE TABLE IF NOT EXISTS xp (
+                    guild_id INTEGER NOT NULL,
+                    user_id INTEGER NOT NULL,
+                    xp INTEGER NOT NULL DEFAULT 0,
+                    level INTEGER NOT NULL DEFAULT 0,
+                    voice_seconds INTEGER NOT NULL DEFAULT 0,
+                    last_message TEXT,
+                    PRIMARY KEY (guild_id, user_id)
+                );
+                CREATE TABLE IF NOT EXISTS giveaways (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    guild_id INTEGER NOT NULL,
+                    channel_id INTEGER NOT NULL,
+                    message_id INTEGER NOT NULL,
+                    prize TEXT NOT NULL,
+                    winners_count INTEGER NOT NULL DEFAULT 1,
+                    host_id INTEGER NOT NULL,
+                    end_time TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'running',
+                    created_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS giveaway_entries (
+                    giveaway_id INTEGER NOT NULL,
+                    user_id INTEGER NOT NULL,
+                    PRIMARY KEY (giveaway_id, user_id)
+                );
+                CREATE TABLE IF NOT EXISTS automod_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    guild_id INTEGER NOT NULL,
+                    user_id INTEGER NOT NULL,
+                    action TEXT NOT NULL,
+                    reason TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
                 """
             )
             conn.commit()
@@ -265,3 +299,215 @@ def ticket_kapat(channel_id):
             conn.commit()
         finally:
             conn.close()
+
+
+# ===================== XP / LEVEL =====================
+
+def xp_ekle(guild_id, user_id, miktar):
+    init_db()
+    with _DB_LOCK:
+        conn = _baglanti()
+        try:
+            row = conn.execute(
+                "SELECT xp, level FROM xp WHERE guild_id=? AND user_id=?",
+                (int(guild_id), int(user_id)),
+            ).fetchone()
+            if row is None:
+                conn.execute(
+                    "INSERT INTO xp (guild_id, user_id, xp, level) VALUES (?, ?, ?, 0)",
+                    (int(guild_id), int(user_id), miktar),
+                )
+            else:
+                conn.execute(
+                    "UPDATE xp SET xp = xp + ? WHERE guild_id=? AND user_id=?",
+                    (miktar, int(guild_id), int(user_id)),
+                )
+            conn.commit()
+        finally:
+            conn.close()
+
+
+def xp_getir(guild_id, user_id):
+    init_db()
+    with _DB_LOCK:
+        conn = _baglanti()
+        try:
+            row = conn.execute(
+                "SELECT xp, level, voice_seconds FROM xp WHERE guild_id=? AND user_id=?",
+                (int(guild_id), int(user_id)),
+            ).fetchone()
+        finally:
+            conn.close()
+    if row is None:
+        return {"xp": 0, "level": 0, "voice_seconds": 0}
+    return {"xp": row["xp"], "level": row["level"], "voice_seconds": row["voice_seconds"]}
+
+
+def xp_level_guncelle(guild_id, user_id, yeni_level):
+    init_db()
+    with _DB_LOCK:
+        conn = _baglanti()
+        try:
+            conn.execute(
+                "UPDATE xp SET level=? WHERE guild_id=? AND user_id=?",
+                (yeni_level, int(guild_id), int(user_id)),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+
+def voice_xp_ekle(guild_id, user_id, saniye):
+    init_db()
+    with _DB_LOCK:
+        conn = _baglanti()
+        try:
+            row = conn.execute(
+                "SELECT user_id FROM xp WHERE guild_id=? AND user_id=?",
+                (int(guild_id), int(user_id)),
+            ).fetchone()
+            if row is None:
+                conn.execute(
+                    "INSERT INTO xp (guild_id, user_id, xp, level, voice_seconds) VALUES (?, ?, 0, 0, ?)",
+                    (int(guild_id), int(user_id), saniye),
+                )
+            else:
+                conn.execute(
+                    "UPDATE xp SET voice_seconds = voice_seconds + ? WHERE guild_id=? AND user_id=?",
+                    (saniye, int(guild_id), int(user_id)),
+                )
+            conn.commit()
+        finally:
+            conn.close()
+
+
+def top_xp_listesi(guild_id, limit=10):
+    init_db()
+    with _DB_LOCK:
+        conn = _baglanti()
+        try:
+            rows = conn.execute(
+                "SELECT user_id, xp, level FROM xp WHERE guild_id=? ORDER BY xp DESC LIMIT ?",
+                (int(guild_id), limit),
+            ).fetchall()
+        finally:
+            conn.close()
+    return [{"user_id": r["user_id"], "xp": r["xp"], "level": r["level"]} for r in rows]
+
+
+# ===================== GIVEAWAYS =====================
+
+def giveaway_olustur(guild_id, channel_id, message_id, prize, winners_count, host_id, end_time):
+    init_db()
+    with _DB_LOCK:
+        conn = _baglanti()
+        try:
+            conn.execute(
+                "INSERT INTO giveaways (guild_id, channel_id, message_id, prize, winners_count, host_id, end_time, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'running', ?)",
+                (int(guild_id), int(channel_id), int(message_id), str(prize), int(winners_count), int(host_id), str(end_time), datetime.now(timezone.utc).isoformat()),
+            )
+            conn.commit()
+            return conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+        finally:
+            conn.close()
+
+
+def giveaway_katil(giveaway_id, user_id):
+    init_db()
+    with _DB_LOCK:
+        conn = _baglanti()
+        try:
+            conn.execute(
+                "INSERT OR IGNORE INTO giveaway_entries (giveaway_id, user_id) VALUES (?, ?)",
+                (int(giveaway_id), int(user_id)),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+
+def giveaway_katilimcilar(giveaway_id):
+    init_db()
+    with _DB_LOCK:
+        conn = _baglanti()
+        try:
+            rows = conn.execute(
+                "SELECT user_id FROM giveaway_entries WHERE giveaway_id=?",
+                (int(giveaway_id),),
+            ).fetchall()
+        finally:
+            conn.close()
+    return [r["user_id"] for r in rows]
+
+
+def giveaway_bitir(giveaway_id):
+    init_db()
+    with _DB_LOCK:
+        conn = _baglanti()
+        try:
+            conn.execute(
+                "UPDATE giveaways SET status='ended' WHERE id=?",
+                (int(giveaway_id),),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+
+def giveaway_getir(giveaway_id):
+    init_db()
+    with _DB_LOCK:
+        conn = _baglanti()
+        try:
+            row = conn.execute(
+                "SELECT * FROM giveaways WHERE id=?",
+                (int(giveaway_id),),
+            ).fetchone()
+        finally:
+            conn.close()
+    if row is None:
+        return None
+    return dict(row)
+
+
+def aktif_giveawayler():
+    init_db()
+    with _DB_LOCK:
+        conn = _baglanti()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM giveaways WHERE status='running'",
+            ).fetchall()
+        finally:
+            conn.close()
+    return [dict(r) for r in rows]
+
+
+# ===================== AUTOMOD LOGS =====================
+
+def automod_log_ekle(guild_id, user_id, action, reason):
+    init_db()
+    with _DB_LOCK:
+        conn = _baglanti()
+        try:
+            conn.execute(
+                "INSERT INTO automod_logs (guild_id, user_id, action, reason, created_at) VALUES (?, ?, ?, ?, ?)",
+                (int(guild_id), int(user_id), str(action), str(reason), datetime.now(timezone.utc).isoformat()),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+
+def automod_log_liste(guild_id, limit=50):
+    init_db()
+    with _DB_LOCK:
+        conn = _baglanti()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM automod_logs WHERE guild_id=? ORDER BY id DESC LIMIT ?",
+                (int(guild_id), limit),
+            ).fetchall()
+        finally:
+            conn.close()
+    return [dict(r) for r in rows]

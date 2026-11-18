@@ -362,6 +362,60 @@ def guncelle_muzik(
     return RedirectResponse(url="/?tab=muzik", status_code=303)
 
 
+@app.post("/guncelle-xp", response_class=RedirectResponse)
+def guncelle_xp(
+    xp_mesaj: int = Form(10),
+    xp_mesaj_cooldown: int = Form(60),
+    xp_voice_per_minute: int = Form(5),
+    xp_duyuru_kanal: str = Form(""),
+):
+    BOT_AYARLARI["xp_mesaj"] = max(1, min(100, int(xp_mesaj)))
+    BOT_AYARLARI["xp_mesaj_cooldown"] = max(10, min(3600, int(xp_mesaj_cooldown)))
+    BOT_AYARLARI["xp_voice_per_minute"] = max(1, min(50, int(xp_voice_per_minute)))
+    _kanal_id_guncelle("xp_duyuru_kanal", xp_duyuru_kanal)
+    BOT_AYARLARI["xp_duyuru_kanal"] = xp_duyuru_kanal
+    _ayarlari_kaydet()
+    return RedirectResponse(url="/?tab=xp", status_code=303)
+
+
+@app.post("/guncelle-automod", response_class=RedirectResponse)
+def guncelle_automod(
+    automod_spam: int = Form(0),
+    automod_spam_limit: int = Form(5),
+    automod_link: int = Form(0),
+    automod_block_invites: int = Form(0),
+    automod_block_all_links: int = Form(0),
+    automod_blocked_domains: str = Form(""),
+    automod_word_filter: int = Form(0),
+    automod_banned_words: str = Form(""),
+    automod_caps: int = Form(0),
+    automod_caps_threshold: float = Form(0.7),
+    automod_mention_spam: int = Form(0),
+    automod_mention_limit: int = Form(5),
+    automod_raid: int = Form(0),
+    automod_raid_limit: int = Form(10),
+    automod_aksiyon: str = Form("uyari"),
+):
+    BOT_AYARLARI["automod_spam"] = bool(automod_spam)
+    BOT_AYARLARI["automod_spam_limit"] = max(2, min(20, int(automod_spam_limit)))
+    BOT_AYARLARI["automod_link"] = bool(automod_link)
+    BOT_AYARLARI["automod_block_invites"] = bool(automod_block_invites)
+    BOT_AYARLARI["automod_block_all_links"] = bool(automod_block_all_links)
+    BOT_AYARLARI["automod_blocked_domains"] = [d.strip() for d in automod_blocked_domains.split(",") if d.strip()]
+    BOT_AYARLARI["automod_word_filter"] = bool(automod_word_filter)
+    BOT_AYARLARI["automod_banned_words"] = [w.strip() for w in automod_banned_words.split(",") if w.strip()]
+    BOT_AYARLARI["automod_caps"] = bool(automod_caps)
+    BOT_AYARLARI["automod_caps_threshold"] = max(0.5, min(1.0, float(automod_caps_threshold)))
+    BOT_AYARLARI["automod_mention_spam"] = bool(automod_mention_spam)
+    BOT_AYARLARI["automod_mention_limit"] = max(2, min(20, int(automod_mention_limit)))
+    BOT_AYARLARI["automod_raid"] = bool(automod_raid)
+    BOT_AYARLARI["automod_raid_limit"] = max(3, min(50, int(automod_raid_limit)))
+    if automod_aksiyon in ("uyari", "sustur", "ban"):
+        BOT_AYARLARI["automod_aksiyon"] = automod_aksiyon
+    _ayarlari_kaydet()
+    return RedirectResponse(url="/?tab=automod", status_code=303)
+
+
 @app.post("/guncelle-komutlar", response_class=RedirectResponse)
 def guncelle_komutlar(sil_max_limit: int = Form(...)):
     BOT_AYARLARI["sil_max_limit"] = max(1, min(100, sil_max_limit))

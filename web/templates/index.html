@@ -448,6 +448,8 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
         <button class="menu-btn{% if active_tab == 'duyuru' %} active{% endif %}" onclick="switchTab('duyuru', this)">📢 Duyuru</button>
         <button class="menu-btn{% if active_tab == 'ticket' %} active{% endif %}" onclick="switchTab('ticket', this)">🎫 Ticket</button>
         <button class="menu-btn{% if active_tab == 'muzik' %} active{% endif %}" onclick="switchTab('muzik', this)">🎵 Müzik</button>
+        <button class="menu-btn{% if active_tab == 'xp' %} active{% endif %}" onclick="switchTab('xp', this)">⭐ XP / Seviye</button>
+        <button class="menu-btn{% if active_tab == 'automod' %} active{% endif %}" onclick="switchTab('automod', this)">🛡️ AutoMod</button>
 
         <div class="menu-group">Gelişmiş</div>
         <button class="menu-btn{% if active_tab == 'kod' %} active{% endif %}" onclick="switchTab('kod', this)">💻 Kod Uzantısı</button>
@@ -509,6 +511,16 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
             <div class="tile-top"><div class="tile-icon">♪</div><span class="tile-badge">Yeni</span></div>
             <div class="tile-title">Müzik</div>
             <div class="tile-desc">Ses kanalında müzik çal.</div>
+        </div>
+        <div class="tile" onclick="switchTab('xp', document.querySelectorAll('.menu-btn')[10])">
+            <div class="tile-top"><div class="tile-icon">⭐</div><span class="tile-badge">Yeni</span></div>
+            <div class="tile-title">XP / Seviye</div>
+            <div class="tile-desc">Mesaj ve ses aktivitesine göre XP.</div>
+        </div>
+        <div class="tile" onclick="switchTab('automod', document.querySelectorAll('.menu-btn')[11])">
+            <div class="tile-top"><div class="tile-icon">🛡</div><span class="tile-badge">Yeni</span></div>
+            <div class="tile-title">AutoMod</div>
+            <div class="tile-desc">Spam, küfür, raid koruması.</div>
         </div>
         <div class="tile" onclick="switchTab('sayac', document.querySelectorAll('.menu-btn')[3])">
             <div class="tile-top"><div class="tile-icon">📊</div><span class="tile-badge">Aktif</span></div>
@@ -644,6 +656,20 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
                 <li><span class="cmd">/duraklat /devam /atla /durdur</span></li>
                 <li><span class="cmd">/kuyruk /ses [0-100] /döngü /cik</span></li>
             </ul>
+            <h3>XP / Seviye</h3>
+            <ul>
+                <li><span class="cmd">/rank [üye]</span> — Seviye ve XP bilgisi.</li>
+                <li><span class="cmd">/top</span> — Liderlik tablosu.</li>
+            </ul>
+            <p>Mesaj başına ve ses kanalında dakika başına XP kazanılır. Seviye atlayınca duyuru gönderilir.</p>
+            <h3>Çekiliş</h3>
+            <ul>
+                <li><span class="cmd">/cekilis [ödül] [süre] [kazanan]</span> — Çekiliş başlatır.</li>
+                <li><span class="cmd">/cekilis-bitir [mesaj_id]</span> — Çekilişi erken bitirir.</li>
+                <li><span class="cmd">/cekilis-reroll [mesaj_id]</span> — Yeniden çeker.</li>
+            </ul>
+            <h3>Otomatik Moderasyon</h3>
+            <p>Spam, link, küfür, caps, mention spam ve raid koruması. Panelde "AutoMod" sekmesinden tüm ayarlar yapılandırılır. Filtre tetiklenince seçilen aksiyon (uyarı/sustur/ban) uygulanır.</p>
         </div>
         <div class="guide-section">
             <h2>Modüller</h2>
@@ -877,6 +903,80 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
             <input type="number" name="muzik_varsayilan_ses" min="0" max="100" value="{{ ayarlar.muzik_varsayilan_ses }}">
             <label>Maksimum Kuyruk Uzunluğu</label>
             <input type="number" name="muzik_max_kuyruk" min="1" max="200" value="{{ ayarlar.muzik_max_kuyruk }}">
+            <button type="submit" class="btn">Kaydet</button>
+        </form>
+    </div>
+</div>
+
+<!-- XP / SEVIYE -->
+<div id="xp" class="tab">
+    <div class="page-head">
+        <h1>XP / Seviye Sistemi</h1>
+        <p>Mesaj ve ses aktivitesine göre XP kazan, seviye atla.</p>
+    </div>
+    <div class="card">
+        <button class="btn-ghost" onclick="window.location.reload();">↻ Yenile</button>
+        <form action="/guncelle-xp" method="post" style="margin-top:12px;">
+            <label>XP per Mesaj</label>
+            <input type="number" name="xp_mesaj" min="1" max="100" value="{{ ayarlar.xp_mesaj }}">
+            <label>Mesaj XP Cooldown (saniye)</label>
+            <input type="number" name="xp_mesaj_cooldown" min="10" max="3600" value="{{ ayarlar.xp_mesaj_cooldown }}">
+            <label>XP per Dakika (Ses)</label>
+            <input type="number" name="xp_voice_per_minute" min="1" max="50" value="{{ ayarlar.xp_voice_per_minute }}">
+            <label>Duyuru Kanalı (seviye atlayınca)</label>
+            <select name="xp_duyuru_kanal">
+                <option value="" {% if not ayarlar.xp_duyuru_kanal %}selected{% endif %}>Kapalı</option>
+                {% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.xp_duyuru_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="btn">Kaydet</button>
+        </form>
+        <p style="color:var(--text-3); font-size:12px; margin-top:8px;">Komutlar: /rank, /top. Seviye rolleri: settings → xp_level_roller</p>
+    </div>
+</div>
+
+<!-- AUTOMOD -->
+<div id="automod" class="tab">
+    <div class="page-head">
+        <h1>Otomatik Moderasyon</h1>
+        <p>Spam, reklam, küfür, caps, mention spam ve raid koruması.</p>
+    </div>
+    <div class="card">
+        <button class="btn-ghost" onclick="window.location.reload();">↻ Kanalları Yenile</button>
+        <form action="/guncelle-automod" method="post" style="margin-top:12px;">
+            <h3 style="margin-bottom:10px;">Filtreler</h3>
+            <label class="chk"><input type="checkbox" name="automod_spam" value="1" {% if ayarlar.automod_spam %}checked{% endif %}> Spam filtresi (hızlı mesaj)</label>
+            <label>Spam Limiti (10 sn içinde max mesaj)</label>
+            <input type="number" name="automod_spam_limit" min="2" max="20" value="{{ ayarlar.automod_spam_limit }}">
+
+            <label class="chk"><input type="checkbox" name="automod_link" value="1" {% if ayarlar.automod_link %}checked{% endif %}> Link filtresi</label>
+            <label class="chk"><input type="checkbox" name="automod_block_invites" value="1" {% if ayarlar.automod_block_invites %}checked{% endif %}> Discord davet linklerini engelle</label>
+            <label class="chk"><input type="checkbox" name="automod_block_all_links" value="1" {% if ayarlar.automod_block_all_links %}checked{% endif %}> Tüm linkleri engelle</label>
+            <label>Yasaklı Domainler (virgülle ayır)</label>
+            <input type="text" name="automod_blocked_domains" value="{{ ayarlar.automod_blocked_domains | join(',') }}">
+
+            <label class="chk"><input type="checkbox" name="automod_word_filter" value="1" {% if ayarlar.automod_word_filter %}checked{% endif %}> Küfür/kelime filtresi</label>
+            <label>Yasaklı Kelimeler (virgülle ayır)</label>
+            <input type="text" name="automod_banned_words" value="{{ ayarlar.automod_banned_words | join(',') }}">
+
+            <label class="chk"><input type="checkbox" name="automod_caps" value="1" {% if ayarlar.automod_caps %}checked{% endif %}> Caps lock filtresi</label>
+            <label>Caps Eşiği (0.5-1.0)</label>
+            <input type="number" name="automod_caps_threshold" min="0.5" max="1.0" step="0.1" value="{{ ayarlar.automod_caps_threshold }}">
+
+            <label class="chk"><input type="checkbox" name="automod_mention_spam" value="1" {% if ayarlar.automod_mention_spam %}checked{% endif %}> Mention spam filtresi</label>
+            <label>Mention Limiti</label>
+            <input type="number" name="automod_mention_limit" min="2" max="20" value="{{ ayarlar.automod_mention_limit }}">
+
+            <label class="chk"><input type="checkbox" name="automod_raid" value="1" {% if ayarlar.automod_raid %}checked{% endif %}> Raid koruması (60sn içinde 10+ katılım)</label>
+            <label>Raid Limiti</label>
+            <input type="number" name="automod_raid_limit" min="3" max="50" value="{{ ayarlar.automod_raid_limit }}">
+
+            <h3 style="margin:14px 0 10px;">Aksiyon</h3>
+            <label>Aksiyon (filtre tetiklenince)</label>
+            <select name="automod_aksiyon">
+                <option value="uyari" {% if ayarlar.automod_aksiyon == 'uyari' %}selected{% endif %}>Uyarı</option>
+                <option value="sustur" {% if ayarlar.automod_aksiyon == 'sustur' %}selected{% endif %}>Sustur (10 dk)</option>
+                <option value="ban" {% if ayarlar.automod_aksiyon == 'ban' %}selected{% endif %}>Ban</option>
+            </select>
             <button type="submit" class="btn">Kaydet</button>
         </form>
     </div>

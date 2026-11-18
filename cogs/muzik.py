@@ -49,6 +49,7 @@ YTDLP_OPTIONS = {
     "no_warnings": True,
     "default_search": "ytsearch",
     "source_address": "0.0.0.0",
+    "remote_components": ["ejs:github"],
 }
 
 import base64
@@ -189,6 +190,7 @@ def _extract(query):
                         "no_warnings": True,
                         "source_address": "0.0.0.0",
                         "format": fmt_str,
+                        "remote_components": ["ejs:github"],
                         "extractor_args": {"youtube": {"player_client": [client_opts["player_client"][0]]}},
                         "http_headers": {"User-Agent": client_opts["User-Agent"]},
                     }

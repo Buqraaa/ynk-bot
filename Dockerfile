@@ -1,7 +1,12 @@
 FROM python:3.12-slim
 
 # FFmpeg kur (muzik sistemi icin)
-RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg curl unzip && rm -rf /var/lib/apt/lists/*
+
+# Deno kur (yt-dlp JS challenge solver icin)
+RUN curl -fsSL https://deno.land/install.sh | sh
+ENV DENO_INSTALL="/root/.deno"
+ENV PATH="${DENO_INSTALL}/bin:${PATH}"
 
 # Calisma dizini
 WORKDIR /app

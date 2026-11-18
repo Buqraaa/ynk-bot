@@ -36,5 +36,8 @@
     "mod_timeout_varsayilan": 10,
     "mod_uyari_limit": 0,
     "muzik_varsayilan_ses": 50,
-    "muzik_max_kuyruk": 50
+    "muzik_max_kuyruk": 50,
+    "hosgeldin_gorsel": true,
+    "hosgeldin_gorsel_baslik": "Hoş geldin!",
+    "hosgeldin_gorsel_mesaj": "Sunucumuza katıldı"
 }

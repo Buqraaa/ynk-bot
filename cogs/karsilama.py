@@ -1,8 +1,11 @@
+import io
+
 import discord
 from discord.ext import commands
 
 from config import BOT_AYARLARI, logger
 from utils import ayarli_kanal
+from welcome_image import hosgeldin_gorseli_olustur
 
 VARSAYILAN_RENK = discord.Color.blurple()
 
@@ -114,9 +117,28 @@ class Karsilama(commands.Cog):
             return
 
         try:
+            embed = _karsilama_embed(member)
+            dosyalar = []
+            if BOT_AYARLARI.get("hosgeldin_gorsel", True):
+                try:
+                    avatar_bytes = await member.display_avatar.read()
+                    gorsel = hosgeldin_gorseli_olustur(
+                        avatar_bytes=avatar_bytes,
+                        uye_adi=member.display_name,
+                        sunucu_adi=member.guild.name,
+                        uye_sayisi=member.guild.member_count,
+                        baslik=BOT_AYARLARI.get("hosgeldin_gorsel_baslik") or "Hoş geldin!",
+                        mesaj=BOT_AYARLARI.get("hosgeldin_gorsel_mesaj") or "Sunucumuza katıldı",
+                    )
+                    dosya = discord.File(io.BytesIO(gorsel), filename="hosgeldin.png")
+                    embed.set_image(url="attachment://hosgeldin.png")
+                    dosyalar.append(dosya)
+                except Exception:
+                    logger.exception("Hosgeldin gorseli olusturulamadi")
             await kanal.send(
                 content=member.mention,
-                embed=_karsilama_embed(member),
+                embed=embed,
+                files=dosyalar,
             )
         except Exception:
             logger.exception("Karşılama mesajı gönderilemedi")

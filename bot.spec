@@ -8,6 +8,7 @@ a = Analysis(
     datas=[('web/templates', 'web/templates')],
     hiddenimports=[
         'db',
+        'welcome_image',
         'nacl',
         'davey',
         'yt_dlp',

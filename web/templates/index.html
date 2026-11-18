@@ -619,7 +619,7 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
         <div class="guide-section">
             <h2>Modüller</h2>
             <h3>Sayaç</h3><p>Hedef üye ve sayaç kanalı.</p>
-            <h3>Karşılama & Veda</h3><p>Karşılama embed'i, otomatik rol, veda mesajı.</p>
+            <h3>Karşılama & Veda</h3><p>Karşılama embed'i, otomatik rol, veda mesajı. Resimli hoşgeldin kartı (avatar + isim + üye sayısı) gönderilebilir.</p>
             <h3>Mod Log</h3><p>Mesaj silme, ban/kick, kanal/rol olayları.</p>
             <h3>YouTube</h3><p>Kanal linki → yeni video/Shorts duyurusu.</p>
             <h3>Duyuru</h3><p>Panelden kanala etiketli duyuru.</p>
@@ -689,6 +689,12 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
             <p style="color:var(--text-3); font-size:12px; margin-top:-6px;">Kullanılabilir: {uye}, {isim}, {sunucu}, {uye_sayisi}</p>
             <label>Embed Rengi</label>
             <input type="text" name="hosgeldin_renk" value="{{ ayarlar.hosgeldin_renk }}">
+            <label class="chk"><input type="checkbox" name="hosgeldin_gorsel" value="1" {% if ayarlar.hosgeldin_gorsel %}checked{% endif %}> Hoşgeldin görseli gönder (resimli kart)</label>
+            <label>Görsel Başlığı</label>
+            <input type="text" name="hosgeldin_gorsel_baslik" value="{{ ayarlar.hosgeldin_gorsel_baslik }}">
+            <label>Görsel Mesajı</label>
+            <input type="text" name="hosgeldin_gorsel_mesaj" value="{{ ayarlar.hosgeldin_gorsel_mesaj }}">
+
             <label>Otomatik Rol</label>
             <select name="hosgeldin_rol_id">
                 <option value="0" {% if not ayarlar.hosgeldin_rol_id %}selected{% endif %}>Rol verme</option>

@@ -208,6 +208,9 @@ def guncelle_karsilama(
     hosgeldin_renk: str = Form("#5865F2"),
     hosgeldin_rol_id: int = Form(0),
     hosgeldin_botlari_dahil: int = Form(0),
+    hosgeldin_gorsel: int = Form(0),
+    hosgeldin_gorsel_baslik: str = Form(""),
+    hosgeldin_gorsel_mesaj: str = Form(""),
     veda_kanal: str = Form(""),
     veda_mesaj: str = Form(""),
 ):
@@ -229,6 +232,14 @@ def guncelle_karsilama(
     BOT_AYARLARI["hosgeldin_rol_id"] = max(0, int(hosgeldin_rol_id))
     BOT_AYARLARI["hosgeldin_botlari_dahil"] = bool(
         hosgeldin_botlari_dahil
+    )
+
+    BOT_AYARLARI["hosgeldin_gorsel"] = bool(hosgeldin_gorsel)
+    BOT_AYARLARI["hosgeldin_gorsel_baslik"] = (
+        hosgeldin_gorsel_baslik.strip() or "Hoş geldin!"
+    )
+    BOT_AYARLARI["hosgeldin_gorsel_mesaj"] = (
+        hosgeldin_gorsel_mesaj.strip() or "Sunucumuza katıldı"
     )
 
     _kanal_id_guncelle("veda_kanal", veda_kanal)

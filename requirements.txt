@@ -8,3 +8,4 @@ pyinstaller
 PyNaCl
 davey
 yt-dlp
+Pillow

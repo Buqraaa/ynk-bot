@@ -165,6 +165,10 @@ git log --oneline
 git checkout -- dosya.py
 ```
 
+## Hoşgeldin Görseli
+
+Karşılama sisteminde resimli hoşgeldin kartı (avatar + isim + üye sayısı) gönderilebilir. Panelde "Karşılama" sekmesinden aç/kapat ve metinleri özelleştir.
+
 ## Cloud / 7-24 Çalıştırma
 
 Oracle Cloud Free Tier ile botu 7/24 çalıştırabilirsiniz:

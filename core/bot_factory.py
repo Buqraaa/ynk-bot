@@ -19,6 +19,7 @@ EXTENSIONS = (
     "cogs.cekilis",
     "cogs.automod",
     "cogs.oyunlar",
+    "cogs.pet",
 )
 
 # Kanal adi -> kanal ID migrasyonu bu anahtarlar icin yapilir.

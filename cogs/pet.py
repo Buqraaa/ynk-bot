@@ -54,7 +54,39 @@ def _ensure_tables():
 
 _ensure_tables()
 
-# ============ PET TÜRLERİ ============
+def _format_coins(n):
+    if n >= 1000000:
+        return f"{n/1000000:.1f}M"
+    if n >= 1000:
+        return f"{n/1000:.1f}K"
+    return str(n)
+
+def _get_coins(user_id):
+    with _DB_LOCK:
+        conn = _baglanti()
+        row = conn.execute("SELECT * FROM ynk_coins WHERE user_id=?", (user_id,)).fetchone()
+        if not row:
+            conn.execute("INSERT INTO ynk_coins (user_id, coins) VALUES (?, 100)", (user_id,))
+            conn.commit()
+            row = conn.execute("SELECT * FROM ynk_coins WHERE user_id=?", (user_id,)).fetchone()
+        result = dict(row)
+        conn.close()
+        return result
+
+def _update_coins(user_id, delta, win=None):
+    with _DB_LOCK:
+        conn = _baglanti()
+        _get_coins(user_id)
+        if win is True:
+            conn.execute("UPDATE ynk_coins SET coins=coins+?, wins=wins+1, streak=streak+1, best_streak=MAX(best_streak, streak+1) WHERE user_id=?", (delta, user_id))
+        elif win is False:
+            conn.execute("UPDATE ynk_coins SET coins=coins+?, losses=losses+1, streak=0 WHERE user_id=?", (delta, user_id))
+        else:
+            conn.execute("UPDATE ynk_coins SET coins=coins+? WHERE user_id=?", (delta, user_id))
+        conn.commit()
+        conn.close()
+
+# ============ PET TÜRLERİ ============""
 PET_TYPES = {
     "kedi": {
         "emoji": "🐱",

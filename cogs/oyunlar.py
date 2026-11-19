@@ -5,46 +5,50 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ui import View, Button
 from config import logger, BOT_AYARLARI
-from db import get_db, init_db
+from db import _baglanti, _DB_LOCK, init_db
 
 # YNK Coin sistemi - db tablosu
 def _ensure_tables():
-    conn = get_db()
-    conn.execute("""CREATE TABLE IF NOT EXISTS ynk_coins (
-        user_id INTEGER PRIMARY KEY,
-        coins INTEGER DEFAULT 100,
-        wins INTEGER DEFAULT 0,
-        losses INTEGER DEFAULT 0,
-        streak INTEGER DEFAULT 0,
-        best_streak INTEGER DEFAULT 0,
-        last_daily TEXT
-    )""")
-    conn.commit()
-    conn.close()
+    with _DB_LOCK:
+        conn = _baglanti()
+        conn.execute("""CREATE TABLE IF NOT EXISTS ynk_coins (
+            user_id INTEGER PRIMARY KEY,
+            coins INTEGER DEFAULT 100,
+            wins INTEGER DEFAULT 0,
+            losses INTEGER DEFAULT 0,
+            streak INTEGER DEFAULT 0,
+            best_streak INTEGER DEFAULT 0,
+            last_daily TEXT
+        )""")
+        conn.commit()
+        conn.close()
 
 _ensure_tables()
 
 def _get_coins(user_id):
-    conn = get_db()
-    row = conn.execute("SELECT * FROM ynk_coins WHERE user_id=?", (user_id,)).fetchone()
-    if not row:
-        conn.execute("INSERT INTO ynk_coins (user_id, coins) VALUES (?, 100)", (user_id,))
-        conn.commit()
+    with _DB_LOCK:
+        conn = _baglanti()
         row = conn.execute("SELECT * FROM ynk_coins WHERE user_id=?", (user_id,)).fetchone()
-    conn.close()
-    return dict(row)
+        if not row:
+            conn.execute("INSERT INTO ynk_coins (user_id, coins) VALUES (?, 100)", (user_id,))
+            conn.commit()
+            row = conn.execute("SELECT * FROM ynk_coins WHERE user_id=?", (user_id,)).fetchone()
+        result = dict(row)
+        conn.close()
+        return result
 
 def _update_coins(user_id, delta, win=None):
-    conn = get_db()
-    _get_coins(user_id)  # ensure exists
-    if win is True:
-        conn.execute("UPDATE ynk_coins SET coins=coins+?, wins=wins+1, streak=streak+1, best_streak=MAX(best_streak, streak+1) WHERE user_id=?", (delta, user_id))
-    elif win is False:
-        conn.execute("UPDATE ynk_coins SET coins=coins+?, losses=losses+1, streak=0 WHERE user_id=?", (delta, user_id))
-    else:
-        conn.execute("UPDATE ynk_coins SET coins=coins+? WHERE user_id=?", (delta, user_id))
-    conn.commit()
-    conn.close()
+    with _DB_LOCK:
+        conn = _baglanti()
+        _get_coins(user_id)  # ensure exists
+        if win is True:
+            conn.execute("UPDATE ynk_coins SET coins=coins+?, wins=wins+1, streak=streak+1, best_streak=MAX(best_streak, streak+1) WHERE user_id=?", (delta, user_id))
+        elif win is False:
+            conn.execute("UPDATE ynk_coins SET coins=coins+?, losses=losses+1, streak=0 WHERE user_id=?", (delta, user_id))
+        else:
+            conn.execute("UPDATE ynk_coins SET coins=coins+? WHERE user_id=?", (delta, user_id))
+        conn.commit()
+        conn.close()
 
 def _format_coins(n):
     if n >= 1000000:
@@ -364,10 +368,11 @@ class Oyunlar(commands.Cog):
         if data.get("last_daily") == today:
             await interaction.response.send_message("❌ Bugün zaten ödülünü aldın! Yarın gel.", ephemeral=True)
             return
-        conn = get_db()
-        conn.execute("UPDATE ynk_coins SET coins=coins+50, last_daily=? WHERE user_id=?", (today, interaction.user.id))
-        conn.commit()
-        conn.close()
+        with _DB_LOCK:
+            conn = _baglanti()
+            conn.execute("UPDATE ynk_coins SET coins=coins+50, last_daily=? WHERE user_id=?", (today, interaction.user.id))
+            conn.commit()
+            conn.close()
         yeni = data["coins"] + 50
         embed = discord.Embed(title="🎁 Günlük Ödül", color=0x00ff00)
         embed.description = f"**50 YNK** coin kazandın! Bakiye: {_format_coins(yeni)} YNK"
@@ -486,9 +491,10 @@ class Oyunlar(commands.Cog):
 
     @app_commands.command(name="liderlik", description="YNK coin liderlik tablosu")
     async def liderlik(self, interaction: discord.Interaction):
-        conn = get_db()
-        rows = conn.execute("SELECT user_id, coins, wins, losses, best_streak FROM ynk_coins ORDER BY coins DESC LIMIT 10").fetchall()
-        conn.close()
+        with _DB_LOCK:
+            conn = _baglanti()
+            rows = conn.execute("SELECT user_id, coins, wins, losses, best_streak FROM ynk_coins ORDER BY coins DESC LIMIT 10").fetchall()
+            conn.close()
         embed = discord.Embed(title="🏆 YNK Coin Liderlik Tablosu", color=0xffd700)
         if not rows:
             embed.description = "Henüz kimse oynamadı!"

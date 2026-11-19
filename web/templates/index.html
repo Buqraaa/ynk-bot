@@ -888,6 +888,17 @@ textarea.code { min-height: 260px; color: #7dd3fc; font-family: 'JetBrains Mono'
             <button type="submit" class="btn">Ticket Panelini Gönder</button>
         </form>
     </div>
+    <div class="card">
+        <h3>🐾 Pet Paneli Gönder</h3>
+        <form action="/pet-panel-gonder" method="post" style="margin-top:12px;">
+            <label>Panelin Gönderileceği Kanal</label>
+            <select name="pet_panel_kanal">
+                <option value="" {% if not ayarlar.pet_panel_kanal %}selected{% endif %}>Kapalı</option>
+                {% for k in kanallar %}<option value="{{ k }}" {% if k == ayarlar.pet_panel_kanal %}selected{% endif %}>#{{ k }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="btn">Pet Panelini Gönder</button>
+        </form>
+    </div>
 </div>
 
 <!-- MÜZİK -->

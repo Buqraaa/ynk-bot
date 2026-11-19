@@ -332,6 +332,33 @@ def ticket_panel_gonder_route(
     return RedirectResponse(url="/?tab=ticket", status_code=303)
 
 
+@app.post("/pet-panel-gonder", response_class=RedirectResponse)
+def pet_panel_gonder_route(pet_panel_kanal: str = Form("")):
+    _kanal_id_guncelle("pet_panel_kanal", pet_panel_kanal)
+    BOT_AYARLARI["pet_panel_kanal"] = pet_panel_kanal
+    _ayarlari_kaydet()
+
+    bot = bot_manager.bot
+    loop = bot_manager.loop
+    if not (bot and loop and not bot.is_closed() and bot.guilds):
+        logger.warning("Pet paneli gönderilemedi: bot çalışmıyor")
+        return RedirectResponse(url="/", status_code=303)
+
+    guild = ayarli_sunucu(bot)
+
+    async def gonder():
+        from cogs.pet import pet_panel_gonder
+        pet_panel_gonder(bot, guild, pet_panel_kanal)
+
+    try:
+        future = asyncio.run_coroutine_threadsafe(gonder(), loop)
+        future.result(15)
+    except Exception:
+        logger.exception("Pet paneli gönderilemedi")
+
+    return RedirectResponse(url="/", status_code=303)
+
+
 @app.post("/guncelle-youtube", response_class=RedirectResponse)
 def guncelle_youtube(
     youtube_channel_id: str = Form(""),

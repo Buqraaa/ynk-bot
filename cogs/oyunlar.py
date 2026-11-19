@@ -4,10 +4,9 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ui import View, Button
-from config import logger, BOT_AYARLARI
-from db import _baglanti, _DB_LOCK, init_db
+from config import logger
+from db import _baglanti, _DB_LOCK
 
-# YNK Coin sistemi - db tablosu
 def _ensure_tables():
     with _DB_LOCK:
         conn = _baglanti()
@@ -40,7 +39,7 @@ def _get_coins(user_id):
 def _update_coins(user_id, delta, win=None):
     with _DB_LOCK:
         conn = _baglanti()
-        _get_coins(user_id)  # ensure exists
+        _get_coins(user_id)
         if win is True:
             conn.execute("UPDATE ynk_coins SET coins=coins+?, wins=wins+1, streak=streak+1, best_streak=MAX(best_streak, streak+1) WHERE user_id=?", (delta, user_id))
         elif win is False:
@@ -57,7 +56,7 @@ def _format_coins(n):
         return f"{n/1000:.1f}K"
     return str(n)
 
-# ============ PENALTI ATIŞI ============
+# ============ PENALTI ATIŞI (ANİMASYONLU) ============
 class PenaltiView(View):
     def __init__(self, user_id, bahis):
         super().__init__(timeout=30)
@@ -70,7 +69,23 @@ class PenaltiView(View):
             await interaction.response.send_message("Bu senin oyunun değil!", ephemeral=True)
             return
         self.bitti = True
+        for child in self.children:
+            child.disabled = True
+        await interaction.response.edit_message(view=self)
+
         kaleci = random.choice(["sol", "sag", "orta"])
+        # Animasyon: top hareket ediyor
+        frames = [
+            ("⚽", "Top hareket ediyor..."),
+            ("⚽➡️", "Kaleci hazırlanıyor..."),
+            ("⚽🥅", "Top kaleye gidiyor!"),
+        ]
+        for emoji, msg in frames:
+            embed = discord.Embed(title="⚽ Penaltı Atışı", color=0x3498db)
+            embed.description = f"{emoji} {msg}"
+            await interaction.message.edit(embed=embed)
+            await asyncio.sleep(0.7)
+
         gol = yon != kaleci
         data = _get_coins(self.user_id)
         if gol:
@@ -83,12 +98,15 @@ class PenaltiView(View):
             sonuc = "🧤 KURTARILDI! Kaleci aynı köşeyi seçti!"
             yeni = data["coins"] - self.bahis
             renk = 0xff0000
+
+        yon_emoji = "⬅️ Sol" if yon == "sol" else "➡️ Sağ" if yon == "sag" else "⬆️ Orta"
+        kaleci_emoji = "⬅️ Sol" if kaleci == "sol" else "➡️ Sağ" if kaleci == "sag" else "⬆️ Orta"
         embed = discord.Embed(title="⚽ Penaltı Atışı", color=renk)
-        embed.add_field(name="Senin seçimin", value=f"{'⬅️ Sol' if yon=='sol' else '➡️ Sağ' if yon=='sag' else '⬆️ Orta'}", inline=True)
-        embed.add_field(name="Kalecinin seçimi", value=f"{'⬅️ Sol' if kaleci=='sol' else '➡️ Sağ' if kaleci=='sag' else '⬆️ Orta'}", inline=True)
+        embed.add_field(name="Senin seçimin", value=yon_emoji, inline=True)
+        embed.add_field(name="Kalecinin seçimi", value=kaleci_emoji, inline=True)
         embed.add_field(name="Sonuç", value=sonuc, inline=False)
         embed.add_field(name="Bakiye", value=f"💰 {_format_coins(yeni)} YNK", inline=True)
-        await interaction.response.edit_message(embed=embed, view=None)
+        await interaction.message.edit(embed=embed, view=None)
 
     @discord.ui.button(label="⬅️ Sol", style=discord.ButtonStyle.primary)
     async def sol(self, interaction, button):
@@ -102,7 +120,7 @@ class PenaltiView(View):
     async def sag(self, interaction, button):
         await self._at(interaction, "sag")
 
-# ============ BLACKJACK ============
+# ============ BLACKJACK (ANİMASYONLU) ============
 class BlackjackView(View):
     def __init__(self, user_id, bahis, kartlar_oyuncu, kartlar_krupiye):
         super().__init__(timeout=60)
@@ -147,6 +165,9 @@ class BlackjackView(View):
             await interaction.response.send_message("Bu senin oyunun değil!", ephemeral=True)
             return
         kartlar = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"]
+        # Animasyon: kart çekiliyor
+        await interaction.response.edit_message(embed=discord.Embed(title="🃏 Blackjack", description="🃏 Kart çekiliyor...", color=0x2f3136))
+        await asyncio.sleep(0.8)
         self.oyuncu.append(random.choice(kartlar))
         toplam = self._toplam(self.oyuncu)
         if toplam > 21:
@@ -162,8 +183,14 @@ class BlackjackView(View):
             await interaction.response.send_message("Bu senin oyunun değil!", ephemeral=True)
             return
         self.bitti = True
+        for child in self.children:
+            child.disabled = True
+        await interaction.response.edit_message(view=self)
+        # Animasyon: krupiye kart çekiyor
         kartlar = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"]
         while self._toplam(self.krupiye) < 17:
+            await interaction.message.edit(embed=discord.Embed(title="🃏 Blackjack", description="🤖 Krupiye kart çekiyor...", color=0x2f3136))
+            await asyncio.sleep(0.7)
             self.krupiye.append(random.choice(kartlar))
         toplam_o = self._toplam(self.oyuncu)
         toplam_k = self._toplam(self.krupiye)
@@ -179,7 +206,7 @@ class BlackjackView(View):
         else:
             await self._guncelle(interaction, "🤝 Berabere! Bahis iade.")
 
-# ============ SLOT MAKİNESİ ============
+# ============ SLOT MAKİNESİ (ANİMASYONLU) ============
 class SlotView(View):
     def __init__(self, user_id, bahis):
         super().__init__(timeout=30)
@@ -193,7 +220,21 @@ class SlotView(View):
             await interaction.response.send_message("Bu senin oyunun değil!", ephemeral=True)
             return
         self.bitti = True
+        for child in self.children:
+            child.disabled = True
+        await interaction.response.edit_message(view=self)
+
         semboller = ["🍒", "🍋", "🍊", "🍇", "⭐", "💎", "7️⃣"]
+        # Animasyon: 4 frame döndür
+        for _ in range(4):
+            s1, s2, s3 = random.choice(semboller), random.choice(semboller), random.choice(semboller)
+            embed = discord.Embed(title="🎰 Slot Makinesi", color=0x9b59b6)
+            embed.description = f"**{s1} | {s2} | {s3}**"
+            embed.add_field(name="Durum", value="🔄 Çevriliyor...", inline=False)
+            await interaction.message.edit(embed=embed)
+            await asyncio.sleep(0.5)
+
+        # Final sonuç
         s1, s2, s3 = random.choice(semboller), random.choice(semboller), random.choice(semboller)
         if s1 == s2 == s3:
             if s1 == "7️⃣":
@@ -222,9 +263,9 @@ class SlotView(View):
         embed.add_field(name="Sonuç", value=f"**{s1} | {s2} | {s3}**", inline=False)
         embed.add_field(name="Durum", value=sonuc, inline=False)
         embed.add_field(name="Bakiye", value=f"💰 {_format_coins(data['coins'])} YNK", inline=True)
-        await interaction.response.edit_message(embed=embed, view=None)
+        await interaction.message.edit(embed=embed, view=None)
 
-# ============ COINFLIP ============
+# ============ COINFLIP (ANİMASYONLU) ============
 class CoinflipView(View):
     def __init__(self, user_id, bahis):
         super().__init__(timeout=30)
@@ -237,6 +278,18 @@ class CoinflipView(View):
             await interaction.response.send_message("Bu senin oyunun değil!", ephemeral=True)
             return
         self.bitti = True
+        for child in self.children:
+            child.disabled = True
+        await interaction.response.edit_message(view=self)
+
+        # Animasyon: para döndürülüyor
+        frames = ["🪙", "👑", "🦅", "👑", "🦅", "🪙"]
+        for f in frames:
+            embed = discord.Embed(title="🪙 Yazı Tura", color=0xf1c40f)
+            embed.description = f"**{f}** Döndürülüyor..."
+            await interaction.message.edit(embed=embed)
+            await asyncio.sleep(0.4)
+
         sonuc = random.choice(["yazi", "tura"])
         if secim == sonuc:
             _update_coins(self.user_id, self.bahis, win=True)
@@ -248,11 +301,11 @@ class CoinflipView(View):
             renk = 0xff0000
         data = _get_coins(self.user_id)
         embed = discord.Embed(title="🪙 Yazı Tura", color=renk)
-        embed.add_field(name="Senin seçimin", value="👑 Yazı" if secim=="yazi" else "🦅 Tura", inline=True)
-        embed.add_field(name="Sonuç", value="👑 Yazı" if sonuc=="yazi" else "🦅 Tura", inline=True)
+        embed.add_field(name="Senin seçimin", value="👑 Yazı" if secim == "yazi" else "🦅 Tura", inline=True)
+        embed.add_field(name="Sonuç", value="👑 Yazı" if sonuc == "yazi" else "🦅 Tura", inline=True)
         embed.add_field(name="Durum", value=msg, inline=False)
         embed.add_field(name="Bakiye", value=f"💰 {_format_coins(data['coins'])} YNK", inline=True)
-        await interaction.response.edit_message(embed=embed, view=None)
+        await interaction.message.edit(embed=embed, view=None)
 
     @discord.ui.button(label="👑 Yazı", style=discord.ButtonStyle.primary)
     async def yazi(self, interaction, button):
@@ -262,13 +315,13 @@ class CoinflipView(View):
     async def tura(self, interaction, button):
         await self._sec(interaction, "tura")
 
-# ============ DICE (Zar) ============
+# ============ DICE (ANİMASYONLU) ============
 class DiceView(View):
     def __init__(self, user_id, bahis, hedef):
         super().__init__(timeout=30)
         self.user_id = user_id
         self.bahis = bahis
-        self.hedef = hedef  # "yuksek" (4-6) veya "dusuk" (1-3)
+        self.hedef = hedef
         self.bitti = False
 
     @discord.ui.button(label="🎲 Zar At", style=discord.ButtonStyle.danger)
@@ -277,6 +330,18 @@ class DiceView(View):
             await interaction.response.send_message("Bu senin oyunun değil!", ephemeral=True)
             return
         self.bitti = True
+        for child in self.children:
+            child.disabled = True
+        await interaction.response.edit_message(view=self)
+
+        # Animasyon: zar döndürülüyor
+        for _ in range(5):
+            zar = random.randint(1, 6)
+            embed = discord.Embed(title="🎲 Zar Oyunu", color=0xe74c3c)
+            embed.description = f"**🎲 {zar}** Döndürülüyor..."
+            await interaction.message.edit(embed=embed)
+            await asyncio.sleep(0.4)
+
         zar = random.randint(1, 6)
         kazandi = (self.hedef == "yuksek" and zar >= 4) or (self.hedef == "dusuk" and zar <= 3)
         if kazandi:
@@ -289,13 +354,13 @@ class DiceView(View):
             renk = 0xff0000
         data = _get_coins(self.user_id)
         embed = discord.Embed(title="🎲 Zar Oyunu", color=renk)
-        embed.add_field(name="Hedefin", value="⬆️ Yüksek (4-6)" if self.hedef=="yuksek" else "⬇️ Düşük (1-3)", inline=True)
+        embed.add_field(name="Hedefin", value="⬆️ Yüksek (4-6)" if self.hedef == "yuksek" else "⬇️ Düşük (1-3)", inline=True)
         embed.add_field(name="Zar", value=f"**{zar}**", inline=True)
         embed.add_field(name="Sonuç", value=msg, inline=False)
         embed.add_field(name="Bakiye", value=f"💰 {_format_coins(data['coins'])} YNK", inline=True)
-        await interaction.response.edit_message(embed=embed, view=None)
+        await interaction.message.edit(embed=embed, view=None)
 
-# ============ RPS (Taş Kağıt Makas) ============
+# ============ RPS (ANİMASYONLU) ============
 class RPSView(View):
     def __init__(self, user_id, bahis):
         super().__init__(timeout=30)
@@ -308,8 +373,20 @@ class RPSView(View):
             await interaction.response.send_message("Bu senin oyunun değil!", ephemeral=True)
             return
         self.bitti = True
-        bot_secim = random.choice(["tas", "kagit", "makas"])
+        for child in self.children:
+            child.disabled = True
+        await interaction.response.edit_message(view=self)
+
         emoji = {"tas": "🪨", "kagit": "📄", "makas": "✂️"}
+        # Animasyon: bot düşünüyor
+        frames = ["🤔", "✊", "✋", "✌️", "🤔", "✊"]
+        for f in frames:
+            embed = discord.Embed(title="✊✋✌️ Taş Kağıt Makas", color=0x9b59b6)
+            embed.description = f"**{f}** Bot düşünüyor..."
+            await interaction.message.edit(embed=embed)
+            await asyncio.sleep(0.35)
+
+        bot_secim = random.choice(["tas", "kagit", "makas"])
         if secim == bot_secim:
             _update_coins(self.user_id, 0)
             msg = "🤝 Berabere!"
@@ -328,7 +405,7 @@ class RPSView(View):
         embed.add_field(name="Bot", value=f"{emoji[bot_secim]} {bot_secim.title()}", inline=True)
         embed.add_field(name="Sonuç", value=msg, inline=False)
         embed.add_field(name="Bakiye", value=f"💰 {_format_coins(data['coins'])} YNK", inline=True)
-        await interaction.response.edit_message(embed=embed, view=None)
+        await interaction.message.edit(embed=embed, view=None)
 
     @discord.ui.button(label="🪨 Taş", style=discord.ButtonStyle.primary)
     async def tas(self, interaction, button):
@@ -466,7 +543,7 @@ class Oyunlar(commands.Cog):
             return
         embed = discord.Embed(title="🎲 Zar Oyunu", color=0xe74c3c)
         embed.description = "Zar atmak için butona bas!"
-        embed.add_field(name="Tahmin", value="⬆️ Yüksek (4-6)" if tahmin=="yuksek" else "⬇️ Düşük (1-3)", inline=True)
+        embed.add_field(name="Tahmin", value="⬆️ Yüksek (4-6)" if tahmin == "yuksek" else "⬇️ Düşük (1-3)", inline=True)
         embed.add_field(name="Bahis", value=f"🎯 {_format_coins(bahis)} YNK", inline=True)
         embed.add_field(name="Bakiye", value=f"💰 {_format_coins(data['coins'])} YNK", inline=True)
         view = DiceView(interaction.user.id, bahis, tahmin)
@@ -505,7 +582,7 @@ class Oyunlar(commands.Cog):
                     name = user.display_name
                 except:
                     name = f"Kullanıcı {r['user_id']}"
-                medal = "🥇" if i==1 else "🥈" if i==2 else "🥉" if i==3 else f"{i}."
+                medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
                 embed.add_field(name=f"{medal} {name}", value=f"💰 {_format_coins(r['coins'])} YNK | 🏆 {r['wins']}W/{r['losses']}L | 🔥 {r['best_streak']}", inline=False)
         await interaction.response.send_message(embed=embed)
 

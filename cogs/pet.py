@@ -205,7 +205,7 @@ def _add_pet_xp(user_id, amount):
     return leveled_up, level
 
 # ============ DM GÖNDERME (PET ALMA) ============
-async def _send_naming_dm(user, pet_type):
+async def _send_naming_dm(bot, user, pet_type):
     """Pet alındıktan sonra DM'den isim sor"""
     try:
         embed = discord.Embed(title="🐾 Yeni Pet!", color=0xff69b4)
@@ -214,9 +214,9 @@ async def _send_naming_dm(user, pet_type):
         await user.send(embed=embed)
 
         def check(m):
-            return m.author == user and m.guild is None
+            return m.author.id == user.id and m.guild is None
 
-        msg = await user.bot.wait_for("message", check=check, timeout=60)
+        msg = await bot.wait_for("message", check=check, timeout=60)
         name = msg.content.strip()[:20]
         if not name:
             name = f"{PET_TYPES[pet_type]['name']}{random.randint(1,999)}"
@@ -244,9 +244,10 @@ async def _send_naming_dm(user, pet_type):
 
 # ============ SELECT MENÜ (PET SEÇİMİ) ============
 class PetSecimView(View):
-    def __init__(self, user_id):
+    def __init__(self, user_id, bot):
         super().__init__(timeout=60)
         self.user_id = user_id
+        self.bot = bot
         self.bitti = False
 
     @discord.ui.select(
@@ -280,7 +281,7 @@ class PetSecimView(View):
         await interaction.followup.send(embed=embed)
 
         # DM gönder
-        asyncio.ensure_future(_send_naming_dm(interaction.user, pet_type))
+        self.bot.loop.create_task(_send_naming_dm(self.bot, interaction.user, pet_type))
 
 # ============ MAĞAZA VIEW ============
 class MagazaView(View):
@@ -442,7 +443,7 @@ class Pet(commands.Cog):
         embed.add_field(name="🐶 Köpek", value="Sadık ve enerjik", inline=True)
         embed.add_field(name="🐦 Kuş", value="Renkli ve neşeli", inline=True)
         embed.add_field(name="🐟 Balık", value="Sakin ve güzel", inline=True)
-        view = PetSecimView(interaction.user.id)
+        view = PetSecimView(interaction.user.id, self.bot)
         await interaction.response.send_message(embed=embed, view=view)
 
     @app_commands.command(name="pet", description="Petini görüntüle")

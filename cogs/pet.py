@@ -380,22 +380,12 @@ class MagazaView(View):
     def _build(self):
         self.children.clear()
 
-        # Kategori seçici
-        cat_select = Select(
-            placeholder="📂 Kategori seç...",
-            options=[
-                discord.SelectOption(label="🍖 Yemek", value="yemek", description="Petini besle"),
-                discord.SelectOption(label="🎾 Oyuncak", value="oyuncak", description="Mutluluğu artır"),
-                discord.SelectOption(label="🎨 Kozmetik", value="kozmetik", description="Görünümü değiştir"),
-            ],
-            custom_id="cat_select"
-        )
-        cat_select.callback = self._cat_callback
-        # Mevcut kategoriyi seçili göster
-        for opt in cat_select.options:
-            if opt.value == self.category:
-                opt.default = True
-        self.add_item(cat_select)
+        # Kategori butonları
+        for cat_key, cat_name in [("yemek", "🍖 Yemek"), ("oyuncak", "🎾 Oyuncak"), ("kozmetik", "🎨 Kozmetik")]:
+            style = discord.ButtonStyle.primary if cat_key == self.category else discord.ButtonStyle.secondary
+            btn = Button(label=cat_name, style=style, custom_id=f"cat_{cat_key}")
+            btn.callback = self._make_cat_callback(cat_key)
+            self.add_item(btn)
 
         # Kategorideki ürünler
         items = [(k, v) for k, v in SHOP_ITEMS.items() if v["cat"] == self.category]
@@ -407,13 +397,16 @@ class MagazaView(View):
             btn.callback = self._make_buy_callback(item_id)
             self.add_item(btn)
 
-    async def _cat_callback(self, interaction):
-        if interaction.user.id != self.user_id:
-            await interaction.response.send_message("Bu senin mağazan değil!", ephemeral=True)
-            return
-        self.category = interaction.data["values"][0]
-        self._build()
-        await interaction.response.edit_message(view=self)
+    def _make_cat_callback(self, cat_key):
+        async def callback(interaction):
+            if interaction.user.id != self.user_id:
+                await interaction.response.send_message("Bu senin mağazan değil!", ephemeral=True)
+                return
+            await interaction.response.defer()
+            self.category = cat_key
+            self._build()
+            await interaction.message.edit(view=self)
+        return callback
 
     def _make_buy_callback(self, item_id):
         async def callback(interaction):
@@ -518,6 +511,65 @@ class EquipView(View):
         self._build()
         await interaction.message.edit(view=self)
 
+# ============ BESLEME VIEW ============
+class FeedView(View):
+    def __init__(self, user_id, pet):
+        super().__init__(timeout=60)
+        self.user_id = user_id
+        self.pet = pet
+        self._build()
+
+    def _build(self):
+        self.children.clear()
+        inv = _get_inventory(self.user_id)
+        foods = [i for i in inv if SHOP_ITEMS.get(i["item_id"], {}).get("type") == "food" and i["quantity"] > 0]
+        options = []
+        for inv_item in foods:
+            item = SHOP_ITEMS[inv_item["item_id"]]
+            options.append(discord.SelectOption(
+                label=f"{item['name']} ({inv_item['quantity']}x)",
+                value=inv_item["item_id"],
+                description=f"+{item['hunger']} açlık, +{item['happiness']} mutluluk",
+            ))
+        if options:
+            select = Select(placeholder="🍖 Yemek seç...", options=options[:25], custom_id="feed_select")
+            select.callback = self._feed_callback
+            self.add_item(select)
+
+    async def _feed_callback(self, interaction):
+        if interaction.user.id != self.user_id:
+            await interaction.response.send_message("Bu senin petin değil!", ephemeral=True)
+            return
+        item_id = interaction.data["values"][0]
+        item = SHOP_ITEMS[item_id]
+        pet = _get_pet(self.user_id)
+        pet = _apply_decay(pet)
+        if _get_item_qty(self.user_id, item_id) < 1:
+            await interaction.response.send_message("❌ Bu yemekten kalmadı!", ephemeral=True)
+            return
+        _remove_inventory(self.user_id, item_id, 1)
+        new_hunger = min(100, pet["hunger"] + item["hunger"])
+        new_happy = min(100, pet["happiness"] + item["happiness"])
+        with _DB_LOCK:
+            conn = _baglanti()
+            conn.execute("UPDATE pets SET hunger=?, happiness=? WHERE user_id=?", (new_hunger, new_happy, self.user_id))
+            conn.commit()
+            conn.close()
+        xp_gain = item["hunger"] // 5
+        leveled, new_level = _add_pet_xp(self.user_id, xp_gain)
+        pet2 = _get_pet(self.user_id)
+        pet2 = _apply_decay(pet2)
+        visual, stage_name = _render_pet(pet2)
+        embed = discord.Embed(title=f"🍖 {pet['pet_name']} beslendi!", color=0x00ff00)
+        embed.description = f"```\n{visual}\n```"
+        embed.add_field(name="Yemek", value=item["name"], inline=True)
+        embed.add_field(name="Açlık", value=f"{pet['hunger']}% → {new_hunger}%", inline=True)
+        embed.add_field(name="Mutluluk", value=f"{pet['happiness']}% → {new_happy}%", inline=True)
+        embed.add_field(name="XP", value=f"+{xp_gain}", inline=True)
+        if leveled:
+            embed.add_field(name="🎉 SEVİYE ATLADI!", value=f"Seviye {new_level} - {stage_name}!", inline=False)
+        await interaction.response.edit_message(embed=embed, view=None)
+
 # ============ COG ============
 class Pet(commands.Cog):
     def __init__(self, bot):
@@ -570,45 +622,22 @@ class Pet(commands.Cog):
         embed.set_footer(text=f"Oluşturulma: {pet['created_at'][:10]}")
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name="pet-besle", description="Petini besle")
-    @app_commands.describe(yemek="Yemek türü (magazadan al)")
-    async def pet_besle(self, interaction: discord.Interaction, yemek: str = "balik_yemi"):
+    @app_commands.command(name="pet-besle", description="Petini besle (envanterinden yemek seç)")
+    async def pet_besle(self, interaction: discord.Interaction):
         pet = _get_pet(interaction.user.id)
         if not pet:
             await interaction.response.send_message("❌ Petin yok! `/pet-sec` ile sahiplen.", ephemeral=True)
             return
         pet = _apply_decay(pet)
-        if yemek not in SHOP_ITEMS or SHOP_ITEMS[yemek]["type"] != "food":
-            await interaction.response.send_message("❌ Geçersiz yemek! `/pet-magaza`'dan al.", ephemeral=True)
+        inv = _get_inventory(interaction.user.id)
+        foods = [i for i in inv if SHOP_ITEMS.get(i["item_id"], {}).get("type") == "food" and i["quantity"] > 0]
+        if not foods:
+            await interaction.response.send_message("❌ Envanterinde yemek yok! `/pet-magaza`'dan satın al.", ephemeral=True)
             return
-        if _get_item_qty(interaction.user.id, yemek) < 1:
-            await interaction.response.send_message(f"❌ Envanterinde **{SHOP_ITEMS[yemek]['name']}** yok! `/pet-magaza`'dan al.", ephemeral=True)
-            return
-
-        item = SHOP_ITEMS[yemek]
-        _remove_inventory(interaction.user.id, yemek, 1)
-        new_hunger = min(100, pet["hunger"] + item["hunger"])
-        new_happy = min(100, pet["happiness"] + item["happiness"])
-        with _DB_LOCK:
-            conn = _baglanti()
-            conn.execute("UPDATE pets SET hunger=?, happiness=? WHERE user_id=?", (new_hunger, new_happy, interaction.user.id))
-            conn.commit()
-            conn.close()
-
-        xp_gain = item["hunger"] // 5
-        leveled, new_level = _add_pet_xp(interaction.user.id, xp_gain)
-        pet2 = _get_pet(interaction.user.id)
-        pet2 = _apply_decay(pet2)
-        visual, stage_name = _render_pet(pet2)
-        embed = discord.Embed(title=f"🍖 {pet['pet_name']} beslendi!", color=0x00ff00)
-        embed.description = f"```\n{visual}\n```"
-        embed.add_field(name="Yemek", value=item["name"], inline=True)
-        embed.add_field(name="Açlık", value=f"{pet['hunger']}% → {new_hunger}%", inline=True)
-        embed.add_field(name="Mutluluk", value=f"{pet['happiness']}% → {new_happy}%", inline=True)
-        embed.add_field(name="XP", value=f"+{xp_gain}", inline=True)
-        if leveled:
-            embed.add_field(name="🎉 SEVİYE ATLADI!", value=f"Seviye {new_level} - {stage_name}!", inline=False)
-        await interaction.response.send_message(embed=embed)
+        embed = discord.Embed(title=f"🍖 {pet['pet_name']} Besle", color=0x00ff00)
+        embed.description = "Envanterinden bir yemek seç."
+        view = FeedView(interaction.user.id, pet)
+        await interaction.response.send_message(embed=embed, view=view)
 
     @app_commands.command(name="pet-oyna", description="Petinle oyna")
     async def pet_oyna(self, interaction: discord.Interaction):

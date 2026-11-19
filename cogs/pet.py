@@ -380,13 +380,6 @@ class MagazaView(View):
     def _build(self):
         self.children.clear()
 
-        # Kategori butonları
-        for cat_key, cat_name in [("yemek", "🍖 Yemek"), ("oyuncak", "🎾 Oyuncak"), ("kozmetik", "🎨 Kozmetik")]:
-            style = discord.ButtonStyle.primary if cat_key == self.category else discord.ButtonStyle.secondary
-            btn = Button(label=cat_name, style=style, custom_id=f"cat_{cat_key}")
-            btn.callback = self._make_cat_callback(cat_key)
-            self.add_item(btn)
-
         # Kategorideki ürünler
         items = [(k, v) for k, v in SHOP_ITEMS.items() if v["cat"] == self.category]
         for item_id, item in items:
@@ -396,20 +389,6 @@ class MagazaView(View):
             btn = Button(label=label, style=discord.ButtonStyle.secondary, custom_id=f"buy_{item_id}")
             btn.callback = self._make_buy_callback(item_id)
             self.add_item(btn)
-
-    def _make_cat_callback(self, cat_key):
-        async def callback(interaction):
-            if interaction.user.id != self.user_id:
-                await interaction.response.send_message("Bu senin mağazan değil!", ephemeral=True)
-                return
-            await interaction.response.defer()
-            self.category = cat_key
-            self._build()
-            try:
-                await interaction.message.edit(view=self)
-            except Exception as e:
-                logger.error(f"Magaza edit hatasi: {e}")
-        return callback
 
     def _make_buy_callback(self, item_id):
         async def callback(interaction):
@@ -674,11 +653,17 @@ class Pet(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="pet-magaza", description="Pet mağazası - yemek, oyuncak, kozmetik")
-    async def pet_magaza(self, interaction: discord.Interaction):
+    @app_commands.describe(kategori="Kategori: yemek, oyuncak, kozmetik")
+    @app_commands.choices(kategori=[
+        app_commands.Choice(name="🍖 Yemek", value="yemek"),
+        app_commands.Choice(name="🎾 Oyuncak", value="oyuncak"),
+        app_commands.Choice(name="🎨 Kozmetik", value="kozmetik"),
+    ])
+    async def pet_magaza(self, interaction: discord.Interaction, kategori: str = "yemek"):
         data = _get_coins(interaction.user.id)
         embed = discord.Embed(title="🏪 Pet Mağazası", color=0x9b59b6)
-        embed.description = f"Bakiyen: 💰 {_format_coins(data['coins'])} YNK\n\nKategori seç, sonra satın al."
-        view = MagazaView(interaction.user.id, "yemek")
+        embed.description = f"Bakiyen: 💰 {_format_coins(data['coins'])} YNK\n\nSatın almak için butona bas."
+        view = MagazaView(interaction.user.id, kategori)
         await interaction.response.send_message(embed=embed, view=view)
 
     @app_commands.command(name="pet-envanter", description="Pet envanterini görüntüle")

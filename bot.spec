@@ -24,6 +24,7 @@ a = Analysis(
         'cogs.xp',
         'cogs.cekilis',
         'cogs.automod',
+        'cogs.oyunlar',
     ],
     hookspath=[],
     hooksconfig={},

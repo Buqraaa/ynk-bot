@@ -402,9 +402,13 @@ class MagazaView(View):
             if interaction.user.id != self.user_id:
                 await interaction.response.send_message("Bu senin mağazan değil!", ephemeral=True)
                 return
+            await interaction.response.defer()
             self.category = cat_key
             self._build()
-            await interaction.response.edit_message(view=self)
+            try:
+                await interaction.message.edit(view=self)
+            except Exception as e:
+                logger.error(f"Magaza edit hatasi: {e}")
         return callback
 
     def _make_buy_callback(self, item_id):
